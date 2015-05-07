@@ -1,0 +1,9 @@
+-- Returns true once n cycles have passed since the beginning of
+-- time.
+node cyclesElapsedGT (n: int) returns (out: bool);
+var count: int ;
+let
+  assert n = (n -> pre(n));
+  count = 0 -> if (n < pre count) then pre count else pre count + 1 ;
+  out = n < count ;
+tel
