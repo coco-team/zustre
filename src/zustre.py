@@ -8,7 +8,6 @@ from z3_utils import *
 from LogManager import LoggingManager
 import os,subprocess,sys
 import shutil
-from bottom_up import BottomUp
 from CoCoSpec import CoCoSpec
 import stats
 from kind2 import Kind2
