@@ -1,61 +1,60 @@
- contract top (x:) returns (OK:);
-     var  (ni_0,greycounter)( a):;
+-- CoCoSpec --
+contract top (x:bool) returns (OK:bool);
+ var time:int; b:bool; a:bool; 
+ let
+   -- INITIAL STATES Contract
+   ensure 
+	OK and  time <= 0 and  not a and  time >= 0 and  not b;
 
-    let
-      -- INIT Contract
-      ensure OK
- 	 and (ni_1,intloopcounter)(time) <= 0
- 	 and not (ni_0,greycounter)(a)
- 	 and (ni_1,intloopcounter)(time) >= 0
- 	 and not (ni_0,greycounter)(b);
+    -- TRANSITION RELATION Contract
+    ensure 
+	(not OK => pre(a) or  pre(time) >= 1) and 
+	time + -1*pre(time) <= 1 and 
+	(not (pre(time) >= 3) => pre(time) + -1*time <= -1) and 
+	(not pre(b) => a) and 
+	(b => pre(a)) and 
+	(pre(a) =>
+	 OK or  pre(b) or  pre(time) <= 0 or  pre(time) >= 2) and 
+	(pre(a) => b) and 
+	(pre(b) => OK or  pre(time) <= 1) and 
+	(pre(b) => not a) and 
+	(not (time >= 0) => pre(time) + -1*time <= -1) and 
+	(not OK => pre(a) or  pre(time) <= 1) and 
+	(not (pre(time) <= 3) => pre(time) + -1*time <= -1) and 
+	(not (time <= 0) => pre(time) >= 4 or  pre(time) <= 2);
+ tel
+ 
+contract greycounter (x:bool) returns (out:bool);
+ var b:bool; a:bool; 
+ let
+   -- INITIAL STATES Contract
+   ensure 
+	not out and  not b and  not a;
 
-      -- STEP Contract
-      ensure OK or  (ni_0,greycounter)(pre a) or (ni_1,intloopcounter)(pre time) >= 1
- 	 and (ni_1,intloopcounter)(pre time) >= 3 or (ni_1,intloopcounter)(pre time) +-1*(ni_1,intloopcounter)(time) <=-1
- 	 and (ni_1,intloopcounter)(time) +-1*(ni_1,intloopcounter)(pre time) <=1
- 	 and not (ni_0,greycounter)(b) or   (ni_0,greycounter)(pre a)
- 	 and (ni_0,greycounter)(pre b) or  (ni_0,greycounter)(a)
- 	 and not  (ni_0,greycounter)(pre a) or OK or (ni_0,greycounter)(pre b) or (ni_1,intloopcounter)(pre time) <= 0 or (ni_1,intloopcounter)(pre time) >= 2
- 	 and not  (ni_0,greycounter)(pre a) or  (ni_0,greycounter)(b)
- 	 and not (ni_0,greycounter)(pre b) or OK or (ni_1,intloopcounter)(pre time) <= 1
- 	 and not (ni_0,greycounter)(pre b) or  not (ni_0,greycounter)(a)
- 	 and (ni_1,intloopcounter)(time) >= 0 or (ni_1,intloopcounter)(pre time) <= -1
- 	 and OK or  (ni_0,greycounter)(pre a) or (ni_1,intloopcounter)(pre time) <= 1
- 	 and (ni_1,intloopcounter)(pre time) <= 3 or (ni_1,intloopcounter)(pre time) +-1*(ni_1,intloopcounter)(time) <=-1
- 	 and (ni_1,intloopcounter)(time) <= 0 or (ni_1,intloopcounter)(pre time) >= 4 or (ni_1,intloopcounter)(pre time) <= 2;
-    tel
-    
- contract greycounter (x:) returns (out:);
-     var  ( a):;
+    -- TRANSITION RELATION Contract
+    ensure 
+	not a = pre(b) and 
+	b = pre(a) and 
+	not out = (not pre(a) or  not a);
+ tel
+ 
+contract intloopcounter (x:bool) returns (out:bool);
+ var time:int; 
+ let
+   -- INITIAL STATES Contract
+   ensure 
+	not out and  time <= 0 and  time >= 0;
 
-    let
-      -- INIT Contract
-      ensure not out
- 	 and not (b)
- 	 and not (a);
-
-      -- STEP Contract
-      ensure not (a) = (pre b)
- 	 and (b) =  (pre a)
- 	 and not out = (not  (pre a) or  not (a));
-    tel
-    
- contract intloopcounter (x:) returns (out:);
-     var  ( time):;
-
-    let
-      -- INIT Contract
-      ensure not out
- 	 and (time) <= 0
- 	 and (time) >= 0;
-
-      -- STEP Contract
-      ensure not out or   (pre time) >= 1
- 	 and  (pre time) + -1*(time) <= -1 or   (pre time) >= 3
- 	 and (time) + -1* (pre time) <= 1
- 	 and out or   (pre time) <= 0 or   (pre time) >= 2
- 	 and not out or   (pre time) <= 1
- 	 and  (pre time) + -1*(time) <= -1 or   (pre time) <= 3
- 	 and not ( (pre time) <= 3) or not ( (pre time) >= 3) or not (not ((time) <= 0) or  not ((time) >= 0));
-    tel
-    
+    -- TRANSITION RELATION Contract
+    ensure 
+	(out => pre(time) >= 1) and 
+	time + -1*pre(time) <= 1 and 
+	(not (pre(time) + -1*time <= -1) => pre(time) >= 3) and 
+	(not out => pre(time) <= 0 or  pre(time) >= 2) and 
+	(out => pre(time) <= 1) and 
+	(not (pre(time) + -1*time <= -1) => pre(time) <= 3) and 
+	(pre(time) <= 3 =>
+	 not (pre(time) >= 3) or 
+	 not (not (time <= 0) or  not (time >= 0)));
+ tel
+ 

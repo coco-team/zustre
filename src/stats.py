@@ -101,11 +101,11 @@ def brunch_print ():
         print 'BRUNCH_STAT {name} {value}'.format (name=k, value=_statistics [k])
     print '----------------------------------------------------------------------'
 
-def xml_print():
+def xml_print(prop, cex):
   """ Print result in XML format """
-  xml = ("""<?xml version="1.0"?>
+  xml_valid = ("""<?xml version="1.0"?>
    <Results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-     <Property name="OK">
+     <Property name="%s">
       <Date>%s</Date>
       <Lustre2Horn unit="sec">%s</Lustre2Horn>
       <Parse unit="sec">%s</Parse>
@@ -114,12 +114,29 @@ def xml_print():
      </Property>
    </Results>
 """)
+  xml_cex =  ("""<?xml version="1.0"?>
+   <Results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+     <Property name="%s">
+      <Date>%s</Date>
+      <Lustre2Horn unit="sec">%s</Lustre2Horn>
+      <Parse unit="sec">%s</Parse>
+      <Query unit="sec">%s</Query>
+      <Answer>%s</Answer>
+      <Counterexample>
+        %s
+      </Counterexample>
+     </Property>
+   </Results>
+""")
   d = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
   lus = get('Lustre2Horn')
   parse = get('Parse')
   query = get('Query')
   result = get('Result')
-  print xml % (str(d),str(lus), str(parse), str(query),result)
+  if cex:
+    print xml_cex % (prop, str(d),str(lus), str(parse), str(query),result, cex)
+  else:
+    print xml_valid % (prop, str(d),str(lus), str(parse), str(query),result)
 
 def timer (key):
     """ ContextManager to help measuring time.

@@ -11,6 +11,7 @@ import shutil
 from CoCoSpec import CoCoSpec
 import stats
 from kind2 import Kind2
+from Cex import Cex
 
 root = os.path.dirname (os.path.dirname (os.path.realpath (__file__)))
 verbose=False
@@ -115,13 +116,11 @@ class Zustre(object):
                 self.log.exception(str(e))
 
 
-    def mk_cex(self):
+    def mk_cex(self, preds):
         self.log.info("Constructing the cex")
-        #1. get_rules_along_trace: gives the bottom-up sequence of rules along the trace
-        #2. get_ground_sat_answer: gives a bottom-up ground cex along the trace -- it's a sequence of instantiations of the form "P(0,1,0,0)", etc.
-        self.log.warning("Work in progress printing CEX")
-        print self.fp.get_rules_along_trace()
-        print self.fp.get_ground_sat_answer()
+        cex = Cex(self.ctx, self.fp, preds, self.coco)
+        return cex.get_cex_xml()
+
 
 
     def encodeAndSolve(self):
@@ -159,15 +158,11 @@ class Zustre(object):
             res = self.fp.query (q[0])
             if res == z3.sat:
                 stat ('Result', 'CEX')
-                if self.args.xml:
-                    stats.xml_print()
-                else:
-                    print '------- CEX ------ '
-                    print self.mk_cex()
-                    print '------------------ '
+                signal_cex_xml = self.mk_cex(preds)
+                stats.xml_print(self.args.node, signal_cex_xml)
             elif res == z3.unsat:
                 stat ('Result', 'SAFE')
-                if self.args.xml: stats.xml_print()
+                if self.args.xml: stats.xml_print(self.args.node, None)
                 if self.args.cg: self.mk_contract (preds)
 
 
@@ -260,7 +255,7 @@ def parseArgs (argv):
                     default=True, dest="simp")
     p.add_argument ('--invs', help='Additional invariants', default=None)
     p.add_argument ('--node', help='Specify top node (default:top)'
-                    , dest='node', default=None)
+                    , dest='node', default="top")
     p.add_argument ('--cg', dest='cg', default=False, action='store_true',
                     help='Generate modular contrats')
     p.add_argument ('--smt2', dest='smt2', default=False, action='store_true',
