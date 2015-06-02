@@ -67,7 +67,8 @@ class Zustre(object):
         return kind2
 
 
-    def mkHorn(self):
+    def mk_horn(self):
+        """generate CHC """
         lusFile = self.args.file
         self.log.info("Modular Hornification ... " + str(lusFile))
         hornDefs = None
@@ -87,7 +88,6 @@ class Zustre(object):
                 tracefile = lusFile_dir + base + ".traces.xml"
                 self.coco.set_ctx(self.ctx)
                 if self.args.cg: self.coco.parseTraceFile(tracefile)
-                #z3printer.getCoCo(coco.varMapping)
                 return smt2_file
             else:
                 self.log.error(hornDefs)
@@ -117,8 +117,8 @@ class Zustre(object):
 
 
     def mk_cex(self, preds):
-        self.log.info("Constructing the cex")
-        cex = Cex(self.ctx, self.fp, preds, self.coco)
+        self.log.info("Building CEX ... ")
+        cex = Cex(self.args, self.ctx, self.fp, preds, self.coco)
         return cex.get_cex_xml()
 
 
@@ -139,7 +139,7 @@ class Zustre(object):
             self.fp.set ('xform.inline_linear',False)
             self.fp.set ('xform.inline_eager',False)
 
-        hornFormulas = self.args.file if self.args.smt2 else self.mkHorn()
+        hornFormulas = self.args.file if self.args.smt2 else self.mk_horn()
         if not hornFormulas:
             self.log.error('Problem generating Horn formulae')
             assert False
@@ -167,8 +167,8 @@ class Zustre(object):
 
 
     def encode(self):
-        # generate horn do not solve
-        hornFormulas = mkHorn()
+        """generate CHC and not solve"""
+        hornFormulas = mk_horn()
         if not hornFormulas:
             self.log.error('Problem generating Horn formulae')
             stat ('Result', 'ERR')

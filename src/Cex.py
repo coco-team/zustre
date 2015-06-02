@@ -9,7 +9,7 @@ from cocoprinter import *
 
 class Cex(object):
 
-    def __init__(self, ctx, fp, preds, coco):
+    def __init__(self, args, ctx, fp, preds, coco):
         self.ctx = ctx
         self.fp = fp
         self._log = LoggingManager.get_logger(__name__)
@@ -17,6 +17,7 @@ class Cex(object):
         self.cex_container = None
         self.preds = preds
         self.coco = coco
+        self.args = args
 
 
     def get_cex_xml(self):
