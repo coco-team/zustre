@@ -51,6 +51,16 @@ class Cex(object):
                     except Exception as e:
                         self._log.warning("Adding a new node cex " + str(e))
                         cex_dict.update({node:{k:ground_pair}})
+                else:
+                    node = node_name
+                    try:
+                        d = cex_dict[node]
+                        max_key = max(k for k, v in d.iteritems() if v != 0) #get the maximum key value and add 1
+                        d.update({(max_key+1):ground_pair})
+                    except Exception as e:
+                        if node not in ["MAIN", "ERR"]:
+                            self._log.warning("Adding a new node cex " + str(e))
+                            cex_dict.update({node:{k:ground_pair}})
             except Exception as e:
                 self._log.warning("Problem with getting a node name: " + str(e))
         ordered_by_signal = self.reorder(cex_dict)
@@ -99,6 +109,7 @@ class Cex(object):
         """ build the xml version of the cex"""
         xml_signal_value = ""
         for node, cex in cex_dict.iteritems():
+            print node, cex
             node_xml = ""
             for signal, it_value in cex.iteritems():
                 if "pre(" not in signal:
