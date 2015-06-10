@@ -116,8 +116,20 @@ class Cex(object):
                     sig_name = ("         <Signal name=\"%s\" node=\"%s\" type=\"%s\">") % (signal, node, typ.lower())
                     sig_values = ""
                     for it, value in it_value.iteritems():
-                        #sanitized_value = value if isinstance(value, int) or in
-                        sig_values = sig_values + ("            <Value time=\"%s\">%s</Value>\n") % (str(it), str(value))
-                    node_xml = sig_name + "\n" + sig_values + "         </Signal>\n"
-                    xml_signal_value = xml_signal_value + node_xml
+                        sanitized_value = self.check_value(value)
+                        if sanitized_value:
+                            sig_values = sig_values + ("            <Value time=\"%s\">%s</Value>\n") % (str(it), str(sanitized_value))
+                    if sig_values != "":
+                        node_xml = sig_name + "\n" + sig_values + "         </Signal>\n"
+                        xml_signal_value = xml_signal_value + node_xml
         return xml_signal_value
+
+
+    def check_value(self, value):
+        """ check if the value is valid"""
+        if "top_" in value:
+            return None
+        elif value in ["False", "True"]:
+            return 0 if value is "False" else 1
+        else:
+            return value
