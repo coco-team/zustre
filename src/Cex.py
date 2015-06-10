@@ -109,7 +109,6 @@ class Cex(object):
         """ build the xml version of the cex"""
         xml_signal_value = ""
         for node, cex in cex_dict.iteritems():
-            print node, cex
             node_xml = ""
             for signal, it_value in cex.iteritems():
                 if "pre(" not in signal:
