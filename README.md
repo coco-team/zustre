@@ -1,3 +1,6 @@
+
+[![Code Issues](http://www.quantifiedcode.com/api/v1/project/f01b6e8e42264a9db43a4221e4ebdb51/badge.svg)](http://www.quantifiedcode.com/app/project/f01b6e8e42264a9db43a4221e4ebdb51)
+
 # Zustre #
 
 Zustre is a modular SMT-based PDR-style verification engine for Lustre programs. It is also an engine to generate assume-guarantee style contract.
