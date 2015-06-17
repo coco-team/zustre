@@ -164,6 +164,9 @@ class Zustre(object):
                 stat ('Result', 'SAFE')
                 if self.args.xml: stats.xml_print(self.args.node, None)
                 if self.args.cg: self.mk_contract (preds)
+            else:
+                if self.args.xml: stats.xml_print(self.args.node, None)
+
 
 
     def encode(self):
