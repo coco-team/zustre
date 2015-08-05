@@ -80,6 +80,11 @@ def get_conjuncts (exp) :
   if z3.is_and (exp) : return exp.children ()
   else : return [exp]
 
+def get_disjuncts (exp) :
+  assert z3.is_bool (exp)
+  if z3.is_or (exp) : return exp.children ()
+  else : return [exp]
+
 def getFirstConjunct (exp) :
   assert z3.is_app (exp)
   if z3.is_and (exp) : return exp.arg (0)
@@ -276,7 +281,6 @@ def Exists (vs, body):
 
 def find_atomic_terms (exp, terms = list (), seen = set ()):
   """ Finds all declarations in an expression """
-
   if (z3.is_quantifier (exp)):
     return find_atomic_terms (exp.body (), terms, seen)
 

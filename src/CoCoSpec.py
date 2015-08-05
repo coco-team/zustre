@@ -20,11 +20,13 @@ debug_coco = ("""contract %s (%s) returns (%s);
  tel
  """)
 
-validate_coco = ("""contract %s (%s) returns (%s);
+coco_spec = ("""contract %s (%s) returns (%s);
 %s
 let
-   ensure    (%s)
-          -> (%s);
+   require (%s);
+
+
+   ensure  (%s);
 tel
 """)
 
@@ -44,6 +46,8 @@ class CoCoSpec(object):
         self.verbose = args.verbose
         self.kind2 = args.kind2
         self.pp = pprint.PrettyPrinter(indent=4)
+        self.tac = None
+        self.verbose = args.verbose
         self.z3Types = {"Int":z3.Int, "Real": z3.Real,"Bool":z3.Bool}
 
 
@@ -52,7 +56,9 @@ class CoCoSpec(object):
         self.pp.pprint(msg)
         print "====== (End) " + method + " ======="
 
-    def set_ctx (self, ctx): self.ctx = ctx
+    def set_ctx (self, ctx):
+        self.ctx = ctx
+        self.tac = CoCoTac(self.verbose, ctx)
 
     def addContract(self, pred, inv):
         if self.verbose: self.log("addContact raw invariants", inv)
@@ -74,13 +80,14 @@ class CoCoSpec(object):
     def ppContract(self):
         self.pp.pprint(self.contract_dict)
 
-    def mkFormulae(self, form):
+
+    def mkFormulae(self, form, node):
         if self.do_simp:
-            tac = CoCoTac(self.ctx, self.verbose)
             if self.verbose: self.log("Before Tac", form)
             form_str = ""
             try:
-                form_str = printCoCo(tac.tac(form))
+                print self.varMappingAll[node]
+                form_str = printCoCo(self.tac.applyTac(form))
                 if self.verbose: self.log("After Tac", form_str)
                 return "\n\t" + form_str
             except Exception as e:
@@ -90,6 +97,33 @@ class CoCoSpec(object):
         else:
             if self.verbose: self.log("No Tac ", form)
             return "\n\t" + printCoCo(form)
+
+
+    def getInput(self, content):
+        """ get input vars """
+        return [x[0] for x in content]
+
+    def mkAssumeGurantee(self, coco_dict):
+        self._log.info("make assume gurantee ... ")
+        ag_dict = {}
+        for node, content in coco_dict.iteritems():
+            inputVars = self.getInput(self.varMappingAll[node]['input'])
+            stepForm = list()
+            try:
+                initForm = content['init']
+                stepForm = content['step']
+            except:
+                initForm = list()
+            node_dict = {'input': inputVars, 'init': initForm, 'step': stepForm}
+            require, ensure = self.tac.applyTac(node_dict)
+            ag_dict.update({node:{"req": require, "ens":ensure}})
+        return ag_dict
+
+    def toStringZ3Formula(self, formula):
+        init = printCoCo(formula[0])
+        step = printCoCo(formula[1])
+        final = "\n\t" + init + "\n\t -> " + step
+        return final
 
     def mkCoCoSpec(self, lusFile):
         coco_dict = {}
@@ -111,25 +145,18 @@ class CoCoSpec(object):
                 except:
                     coco_dict.update({node_name:{"step":form}})
             else:
-                self._log.warning("pred: " + str(pred) + "with no init or step")
-                node_name = str(pred)
-                coco_dict.update({node_name:{"aux":form}})
+                self._log.warning("Node " + str(pred) + " has no contract")
         all_contract = "-- CoCoSpec --\n"
+        ag_dict = self.mkAssumeGurantee(coco_dict)
         for node, form in coco_dict.iteritems():
             profile = self.contractProfile(node) if is_contract_profile else "() returns ();"
             outputList = (self.varMappingAll[node])["output"]
             inp = self.mkProfileInOut((self.varMappingAll[node])["input"])
             out = self.mkProfileInOut(outputList)
             local = self.mkProfileLocal((self.varMappingAll[node])["local_init"], outputList)
-            pattern_coco = validate_coco if self.kind2 else debug_coco
-            try:
-                # this is case when we don't have init and step
-                aux_form = self.mkFormulae(form["aux"])
-                contract =  pattern_coco % (node, inp, out, local, aux_form, "")
-            except Exception as e:
-                init_form = self.mkFormulae(form["init"])
-                step_form = self.mkFormulae(form["step"])
-                contract =  pattern_coco % (node, inp, out, local, init_form, step_form)
+            require = self.toStringZ3Formula((ag_dict[node])['req'])
+            ensure = self.toStringZ3Formula((ag_dict[node])['ens'])
+            contract =  coco_spec % (node, inp, out, local, require, ensure)
             all_contract += contract + "\n"
             if self.verbose: print "==== CoCo ===  \n" + contract + "\n===== CoCo ====="
         if self.kind2:
@@ -142,6 +169,7 @@ class CoCoSpec(object):
             else:
                 self._log.warning("Lustre parsing NOT OK")
                 assert False
+        print all_contract
         return all_contract
 
     def mkProfileInOut(self, inpList):
@@ -227,7 +255,7 @@ class CoCoSpec(object):
 
 class CoCoTac(object):
 
-    def __init__(self,ctx, verbose):
+    def __init__(self, verbose, ctx):
         self.verbose = verbose
         self.ctx = ctx
         self.pp = pprint.PrettyPrinter(indent=4)
@@ -267,6 +295,7 @@ class CoCoTac(object):
 
     def tac2(self, expr):
         "tactic to transform [a v b] into [not(a) => b]"
+
         if self.verbose: self.log("TAC-2 Before", str(expr))
         lhs_list = self.nnf(z3.Not(expr.arg(0)))[0]
         rhs_list = expr.children()[1:]
@@ -289,18 +318,78 @@ class CoCoTac(object):
         return simp
 
 
-    def tac(self, expr):
+    def nonClauseTac(self, expr):
+        """
+        If the formula is of type other than OR(f1...fn) do some simple tactic
+        and no AG.
+        """
+        if self.verbose: print "Non Clause Tac: " + str(expr)
         if self.is_iff(expr) and self.is_not(expr.arg(0)):
             simplified = self.tac1(expr)
             return simplified
-        elif self.is_and(expr):
-            simp_formula = []
-            for dis in get_conjuncts(expr):
-                if self.is_or(dis):
-                    simp = self.tac2(dis)
-                    simp_formula.append(simp)
-                else:
-                    simp_formula.append(dis)
-            return z3.And(simp_formula, self.ctx)
         else:
             return expr
+
+
+    def clauseTac(self, form, inputVars):
+        """ If the formula is of type OR(f1...fn)"""
+        # TODO atoms keeps on growing
+        if self.verbose: print "Clause Tac: " + str(form)
+        disjunct = get_disjuncts(form)
+        req, ens = list(), list()
+        for dis in disjunct:
+            vars = find_atomic_terms(dis, list(), set())
+            if set(vars) < set(inputVars):
+                req.append(dis)
+        if req == []:
+            # no changes happen
+            ens.append(self.tac2(form))
+            req.append(z3.BoolVal(True))
+        return req, ens
+
+    def getVarNames(self, clause):
+        """ Get list of variablse"""
+        return
+
+    def handleFormula(self, form, inputVars):
+        """ Handling init and step formulas (list)"""
+        req_list, ens_list = list(), list()
+        req, ens = [], []
+        for f in form:
+            if self.is_or(f):
+                req, ens =  self.clauseTac(f, inputVars)
+            else:
+                ens_list.append(self.nonClauseTac(f))
+        req_list = [z3.BoolVal(True)] if req == [] else req
+        ens_list = ens_list if ens == [] else ens_list + ens
+        ensure = z3.And(ens_list, self.ctx) if len(ens_list) > 1 else ens_list[0]
+        require = z3.And(req_list, self.ctx) if len(req_list) > 1 else req_list[0]
+        return require, ensure
+
+
+    def applyTac(self, node_dict):
+        initF =node_dict['init']
+        stepF =node_dict['step']
+        inputVars = node_dict['input']
+        initF_list = get_conjuncts(initF) if self.is_and(initF) else [initF]
+        stepF_list = get_conjuncts(stepF) if self.is_and(stepF) else [stepF]
+        req_init, ens_init = self.handleFormula(initF_list, inputVars)
+        req_step, ens_step = self.handleFormula(stepF_list, inputVars)
+        return [req_init, req_step], [ens_init, ens_step]
+
+
+
+        # if self.is_iff(expr) and self.is_not(expr.arg(0)):
+        #     simplified = self.tac1(expr)
+        #     return simplified
+        # elif self.is_and(expr):
+        #     simp_formula = []
+        #     for dis in get_conjuncts(expr):
+        #         if self.is_or(dis):
+        #             simp = self.tac2(dis)
+        #             simp_formula.append(simp)
+        #         else:
+        #             simp_formula.append(dis)
+        #     return z3.And(simp_formula, self.ctx)
+        # else:
+        #     return expr

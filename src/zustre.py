@@ -24,6 +24,8 @@ class Zustre(object):
         self.fp = fp
         self.ctx = ctx
         self.coco = CoCoSpec(self.args)
+        self.smt2_file = None
+        self.trace_file = None
         if self.args.xml: LoggingManager.disable_logger()
         return
 
@@ -84,8 +86,9 @@ class Zustre(object):
             if "done" in hornDefs:
                 base = (os.path.splitext(os.path.basename(lusFile)))[0]
                 smt2_file = lusFile_dir + base + ".smt2"
-                #parse trace file
                 tracefile = lusFile_dir + base + ".traces.xml"
+                self.smt2_file = smt2_file
+                self.trace_file = tracefile
                 self.coco.set_ctx(self.ctx)
                 if self.args.cg: self.coco.parseTraceFile(tracefile)
                 return smt2_file
@@ -166,6 +169,13 @@ class Zustre(object):
                 if self.args.cg: self.mk_contract (preds)
             else:
                 if self.args.xml: stats.xml_print(self.args.node, None)
+        if not self.args.save:
+            self.log.info("Cleaning up temp files ...")
+            try:
+                os.remove(self.smt2_file)
+                os.remove(self.trace_file)
+            except:
+                return
 
 
 
@@ -269,6 +279,8 @@ def parseArgs (argv):
                     default=False, dest="kind2")
     p.add_argument ('--xml', help='Output result in XML format', action='store_true',
                     default=False, dest="xml")
+    p.add_argument ('--save', help='Save intermediate files', action='store_true',
+                    default=False, dest="save")
     p.add_argument ('--no_dl', help='Disable Difference Logic (UTVPI) in SPACER', action='store_true',
                     default=False, dest="utvpi")
     pars = p.parse_args (argv)
