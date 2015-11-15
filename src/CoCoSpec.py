@@ -23,10 +23,10 @@ debug_coco = ("""contract %s (%s) returns (%s);
 coco_spec = ("""contract %s (%s) returns (%s);
 %s
 let
-   require (%s);
+   assume (%s);
 
 
-   ensure  (%s);
+   guarantee  (%s);
 tel
 """)
 
@@ -169,7 +169,6 @@ class CoCoSpec(object):
             else:
                 self._log.warning("Lustre parsing NOT OK")
                 assert False
-        print all_contract
         return all_contract
 
     def mkProfileInOut(self, inpList):

@@ -1,0 +1,69 @@
+
+
+contract d (incr: bool) returns (out: int) ;
+let
+  guarantee out >= 0 ;
+tel
+
+
+-- Increments its output only when [incr] is true, starting at 0.
+node d (incr: bool) returns (out: int) ;
+--!contract: d;
+let
+  out = 0 -> if incr then pre out + 1 else pre out ;
+tel
+
+
+contract c (in: int; mem: bool) returns (out: int) ;
+--@mode something ;
+let 
+  mode test(
+      require in >= 0 ;
+      ensure  out >= 0 ;
+      );
+tel
+
+-- Memorizes the value of [in] when [mem] is true.
+node c (in: int; mem: bool) returns (out: int) ;
+--@contract:  c;
+let
+  out = in -> if mem then in else pre out ;
+tel
+
+-- Increments [out] when [incr] is true, memorizes [out] when [mem] is
+-- true.
+node b (incr, mem: bool) returns (out, old_out: int) ;
+let
+  out = d(incr) ;
+  old_out = c(out, mem) ;
+tel
+
+
+-- memorizing the 3 last values of [out] when [mem] is true.
+contract a (incr, mem: bool) returns (out, p_out, pp_out, ppp_out: int) ;
+let
+  mode bla (
+      require not (incr and mem) ;
+      ensure not (out = p_out) ; 
+      );
+
+  mode bli(
+      require not (incr and mem) ;
+      ensure not (out = p_out) ;
+  ); 
+ guarantee out >= 0 ;
+ guarantee p_out >= 0 ;
+ guarantee pp_out >= 0 ;
+ guarantee ppp_out >= 0 ;
+tel
+
+-- Increments [out] when [incr] is true, with a sliding window
+-- memorizing the 3 last values of [out] when [mem] is true.
+node a (incr, mem: bool) returns (out, p_out, pp_out, ppp_out: int) ;
+--!contract: a ;
+let
+  out, p_out = b(incr, mem) ;
+  pp_out = c(out -> pre p_out, mem) ;
+  ppp_out = c(out -> pre pp_out, mem) ;
+  --!MAIN :  true;
+tel
