@@ -35,7 +35,7 @@ Zustre and dependencies are installed in `build/run`
 
 * To generate CoCoSpec contract of Lustre code:
 ```
-> python src/zustre.py [LUSTRE_FILE] --cg --node [OBSERVER NODE (default: top)]
+> ./build/run/bin/zustre [LUSTRE_FILE] --cg --node [OBSERVER NODE (default: top)]
 ```
 
 ### Options ###
