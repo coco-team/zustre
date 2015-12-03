@@ -5,6 +5,8 @@
 
 Zustre is a modular SMT-based PDR-style verification engine for Lustre programs. It is also an engine to generate assume-guarantee style contract.
 
+##License##
+Zustre is distributed under a modified BSD license. See [LICENSE](LICENSE) for details.
 
 ### Dependencies ###
 
@@ -12,8 +14,6 @@ Zustre is a modular SMT-based PDR-style verification engine for Lustre programs.
 * [SPACER (PDR engine)](http://spacer.bitbucket.org/)
 * Python v. 2.7.
 
-#License#
-Zustre is distributed under a modified BSD license. See [license.txt](license.txt) for details.
 
 #Compilation#
 
