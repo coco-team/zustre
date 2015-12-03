@@ -34,13 +34,10 @@ if (GIT_FOUND)
     CACHE STRING "lustrec repo")
   add_custom_target (lustrec-git
     ${GIT_EXECUTABLE} clone ${LUSTREC_REPO} ${CMAKE_SOURCE_DIR}/lustrec)
-
   add_custom_target (extra DEPENDS lustrec-git)
 else()
   message (STATUS "Could not find git. Not adding 'extra' target.")
 endif()
-
-
 
 include(ExternalProject)
 set_property(DIRECTORY PROPERTY EP_STEP_TARGETS configure build test)
@@ -81,28 +78,11 @@ else()
 endif()
 
 
-
-set (LUSTREC_TAG "origin/master" CACHE STRING "LUSTREC git tag to use")
-set (LUSTREC_REPO "https://github.com/coco-team/lustrec/lustrec.git" CACHE STRING "LUSTREC repo")
-
-ExternalProject_Add(lustrec
-  GIT_REPOSITORY  ${LUSTREC_REPO}
-  GIT_TAG ${LUSTREC_TAG}
-  BUILD_IN_SOURCE 1
-  INSTALL_DIR ${CMAKE_BINARY_DIR}/run
-  ./configure -p <INSTALL_DIR> -b build
-  BUILD_COMMAND make -j3 -C build
-  INSTALL_COMMAND make -C build install
-  COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_LIST_FILE}
-  LOG_CONFIGURE 1
-  LOG_INSTALL 1
-  LOG_BUILD 1)
-
 find_package(LUSTREC)
 if (NOT LUSTREC_FOUND)
-  ExternalProject_Get_Property (lustrec INSTALL_DIR)
+  # ExternalProject_Get_Property (lustrec INSTALL_DIR)
   set(LUSTREC_ROOT ${INSTALL_DIR} CACHE PATH "Forced location of LUSTREC" FORCE)
-  message(WARNING "No LUSTREC found. Run \n\tcmake --build . && cmake ${CMAKE_SOURCE_DIR}")
+  message(WARNING "No LUSTREC found. \n\t Set location of lusterc with option  -DLUSTREC_EXECUTABLE=  ")
 else()
   set_target_properties(lustrec PROPERTIES EXCLUDE_FROM_ALL ON)
   message ("Found LUSTREC at ${LUSTREC_EXECUTABLE}")
@@ -124,7 +104,7 @@ set(CPACK_PACKAGE_VERSION_MAJOR ${Zustre_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${Zustre_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${Zustre_VERSION_PATCH})
 set(CPACK_PACKAGE_VERSION ${PACKAGE_VERSION})
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/license.txt")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 if(CMAKE_BUILD_TYPE STREQUAL Release)
@@ -146,7 +126,7 @@ include(CPack)
 
 install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/README.md DESTINATION .)
 # install all the licenses
-install (FILES  ${CMAKE_CURRENT_SOURCE_DIR}/license.txt
+install (FILES  ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE
   DESTINATION share/
   RENAME zustre_license.txt)
 

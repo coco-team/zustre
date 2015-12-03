@@ -49,10 +49,11 @@ class Zustre(object):
 
     def getLustreC (self):
         lustrec = None
-        if 'LUSTREC' in os.environ:
-            lustrec = os.environ ['LUSTREC']
+        # if 'LUSTREC' in os.environ:
+        #     lustrec = os.environ ['LUSTREC']
         if not self.isexec (lustrec):
-            lustrec = os.path.join (root, "bin/lustrec")
+            bin = os.path.abspath (os.path.join(root, '..', '..', 'bin'))
+            lustrec = os.path.join (bin, "lustrec")
         if not self.isexec (lustrec):
             raise IOError ("Cannot find LustreC")
         return lustrec
@@ -136,6 +137,9 @@ class Zustre(object):
         self.fp.set('reset_obligation_queue',False)
         self.fp.set('spacer.elim_aux',False)
         if self.args.utvpi: self.fp.set('pdr.utvpi', False)
+        if self.args.tosmt:
+            self.log.info("Setting low level printing")
+            self.fp.set ('print.low_level_smt2',True)
         if not self.args.pp:
             self.log.info("No pre-processing")
             self.fp.set ('xform.slice', False)
@@ -145,10 +149,20 @@ class Zustre(object):
         hornFormulas = self.args.file if self.args.smt2 else self.mk_horn()
         if not hornFormulas:
             self.log.error('Problem generating Horn formulae')
-            assert False
+            return
         with stats.timer ('Parse'):
             self.log.info('Successful Horn VCC generation ... ' + str(hornFormulas))
             q = self.fp.parse_file (hornFormulas)
+            # if self.args.tosmt:
+            #     s = z3.Solver()
+            #     self.log.info("Printing Horn in SMT format")
+            #     with open(hornFormulas, 'r') as f:
+            #         h = f.readlines()
+            #         for line in h:
+            #             print to_smtlib(line)
+
+
+            #     return
         preds = fp_get_preds(self.fp) # get the predicates before z3 starts playing with them
         if self.args.invs :
             lemmas = z3.parse_smt2_file (args.invs, sorts={}, decls={}, ctx=ctx)
@@ -273,6 +287,8 @@ def parseArgs (argv):
                     help='Generate modular contrats')
     p.add_argument ('--smt2', dest='smt2', default=False, action='store_true',
                     help='Directly encoded file in SMT2 Format')
+    p.add_argument ('--to-smt', dest='tosmt', default=False, action='store_true',
+                       help='Print Horn Clause in SMT Format')
     p.add_argument ('--no_solving', dest='no_solving', default=False, action='store_true',
                     help='Generate only Horn clauses, i.e. do not solve')
     p.add_argument ('--validate', help='Validate generated contract with Kind2', action='store_true',
