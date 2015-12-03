@@ -24,7 +24,7 @@ script:
   - mkdir run
   - cp -r $LZ/* run
   - ls run
-  - /usr/bin/cmake -DLUSTREC_EXECUTABLE=run -DZ3_ROOT=run -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=run -DCMAKE_PROGRAM_PATH=/usr/bin  ../;
+  - /usr/bin/cmake -DLUSTREC_EXECUTABLE=run -DZ3_ROOT=run -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=run/bin/ -DCMAKE_PROGRAM_PATH=/usr/bin  ../;
 
 after_failure: "cat /home/travis/build/seahorn/seahorn/build/llvm-prefix/src/llvm-stamp/llvm-build-*.log"
 
