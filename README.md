@@ -1,5 +1,6 @@
 
 [![Code Issues](http://www.quantifiedcode.com/api/v1/project/f01b6e8e42264a9db43a4221e4ebdb51/badge.svg)](http://www.quantifiedcode.com/app/project/f01b6e8e42264a9db43a4221e4ebdb51)
+[![Build Status](https://travis-ci.org/coco-team/zustre.svg)](https://travis-ci.org/coco-team/zustre)
 
 # Zustre #
 
