@@ -191,8 +191,6 @@ class Zustre(object):
             except:
                 return
 
-
-
     def encode(self):
         """generate CHC and not solve"""
         hornFormulas = mk_horn()
