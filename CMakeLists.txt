@@ -84,7 +84,7 @@ if (NOT LUSTREC_FOUND)
   set(LUSTREC_ROOT ${INSTALL_DIR} CACHE PATH "Forced location of LUSTREC" FORCE)
   message(WARNING "No LUSTREC found. \n\t Set location of lusterc with option  -DLUSTREC_EXECUTABLE=  ")
 else()
-  set_target_properties(lustrec PROPERTIES EXCLUDE_FROM_ALL ON)
+  # set_target_properties(lustrec PROPERTIES EXCLUDE_FROM_ALL ON)
   message ("Found LUSTREC at ${LUSTREC_EXECUTABLE}")
   # indicate that we want lustrec binary to be included in the binary distribution
   install (PROGRAMS ${LUSTREC_EXECUTABLE} DESTINATION bin)
