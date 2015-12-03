@@ -8,24 +8,29 @@ Zustre is a modular SMT-based PDR-style verification engine for Lustre programs.
 
 ### Dependencies ###
 
-* [LustreC (Lustre compiler)](https://github.com/lememta/lustrec)
+* [LustreC (Lustre compiler)](https://github.com/coco-team/lustrec)
 * [SPACER (PDR engine)](http://spacer.bitbucket.org/)
 * Python v. 2.7.
 
-### Build ###
+#License#
+Zustre is distributed under a modified BSD license. See [license.txt](license.txt) for details.
 
-* Build separately [LustreC](https://bitbucket.org/lememta/lustrec) and [SPACER](http://spacer.bitbucket.org/)
-* Set the following global variable: 
-```
-export LUSTREC=[PATH_TO_LUSTREC_BIN]
-export PYTHONPATH=$PYTHONPATH:[PATH_TO_SPACER_PYTHON_BUILD]
-```
+#Compilation#
+
+*  Build separately [LustreC](https://github.com/coco-team/lustrec) 
+* `cd zustre ; mkdir build ; cd build`
+* `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=run -DLUSTREC_EXECUTABLE=LUSTREC ../ ` where `LUSTREC_BIN` is the directory containing the lustrec binary.
+* `cmake --build .` to build zustre
+* `cmake --build . --target install` to install everything in `run` directory
+* `cmake --build . --target package` to package everything.
+
+Zustre and dependencies are installed in `build/run`
 
 
 ### How to use Zustre? ###
 * To simply verify Lustre code:
 ```
-> python src/zustre.py [LUSTRE_FILE] --node [OBSERVER NODE (default: top)]
+>  ./build/run/bin/zustre [LUSTRE_FILE] --node [OBSERVER NODE (default: top)]
 ```
 
 * To generate CoCoSpec contract of Lustre code:
