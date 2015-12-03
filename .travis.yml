@@ -1,0 +1,71 @@
+language: python
+python:
+    - 2.7.8
+    - 2.7
+    - pypy
+    - 3.3
+    - 3.4
+    - 3.5
+
+cache: apt
+before_install:
+   - until sudo add-apt-repository -y ppa:saiarcot895/chromium-beta; do echo retry; done
+   - until sudo add-apt-repository --yes ppa:kalakris/cmake; do echo retry; done
+   - until sudo apt-get -qq update; do echo retry; done 
+   - until sudo apt-get install cmake; do echo retry; done
+   
+install:
+  - until sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test; do echo retry; done
+  - until sudo apt-get -qq install libboost-all-dev libboost-test-dev libboost-program-options-dev; do echo retry; done            
+  - wget http://dl.dropboxusercontent.com/u/203889738/gcc/ninja.tar.gz;
+    tar xfz ninja.tar.gz;
+    cd ninja;
+    ./bootstrap.py > /dev/null 2>&1;
+    sudo cp -v ninja /usr/bin/;
+    cd ..;
+  - ninja --version
+  - until sudo apt-get -qq update; do echo retry; done 
+  - until sudo apt-get -qq install libstdc++-4.8-dev; do echo retry; done
+  - if [[ $CMAKE_CXX_COMPILER == g++-4.8 ]]; then until sudo apt-get -qq install g++-4.8; do echo retry; done fi
+  - wget --no-verbose --output-document=boost-trunk.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2/download
+  - export BOOST_ROOT="$TRAVIS_BUILD_DIR/../boost-trunk"
+  - export CMAKE_MODULE_PATH="$BOOST_ROOT"
+  - mkdir -p $BOOST_ROOT
+  - tar jxf boost-trunk.tar.bz2 --strip-components=1 -C $BOOST_ROOT
+  - (cd $BOOST_ROOT; ./bootstrap.sh --with-libraries=date_time,filesystem,system,iostreams,regex,python,test)
+  - (cd $BOOST_ROOT; ./b2 threading=multi --prefix=$BOOST_ROOT -d0 install)
+  - cd ..
+  - export LZ="$TRAVIS_BUILD_DIR/../zus"
+  - mkdir -p $LZ
+  - wget --output-document=zustre.tar.gz  https://www.dropbox.com/s/wqvh31085s49ia4/zustre.tar.gz?dl=1;
+  - tar xvf zustre.tar.gz --strip-components=1 -C $LZ;
+  - ls $LZ
+
+script:
+  - mkdir -p build
+  - cd build
+  - mkdir run
+  - cp -r $LZ/* run
+  - GENERATOR=-GNinja;
+  - pwd
+  - ls 
+  - ls ../zustre
+  - /usr/bin/cmake -DBOOST_ROOT=$BOOST_ROOT -DLUSTREC_EXECUTABLE=run -DZ3_ROOT=run -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_PROGRAM_PATH=/usr/bin  -DCMAKE_INSTALL_PREFIX=run ../;
+
+after_failure: "cat /home/travis/build/seahorn/seahorn/build/llvm-prefix/src/llvm-stamp/llvm-build-*.log"
+
+after_script:
+  - /usr/bin/cmake --build . > ./build.log 2>&1
+  - /usr/bin/cmake --build . --target install > ./build.log 2>&1
+  - cd ..
+  - ls build/run/bin
+  - ./build/run/bin/zustre -h
+
+
+
+notifications:
+  email:
+    recipients:
+     - zustre-build@googlegroups.com
+    on_success: always
+    on_failure: always
