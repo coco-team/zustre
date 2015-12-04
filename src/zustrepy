@@ -67,7 +67,6 @@ def main (argv):
 
 
 if __name__ == '__main__':
-    import stats
      # unbuffered output
     sys.stdout = os.fdopen (sys.stdout.fileno (), 'w', 0)
     path = os.path.abspath (sys.argv[0])
@@ -84,6 +83,7 @@ if __name__ == '__main__':
     if os.path.isdir (z3_path): sys.path.insert(0, z3_path)
 
     res = None
+    import stats
     try:
         main (sys.argv)
     finally:
