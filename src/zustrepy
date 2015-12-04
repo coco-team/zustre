@@ -67,7 +67,6 @@ def main (argv):
 
 
 if __name__ == '__main__':
-    import stats
      # unbuffered output
     sys.stdout = os.fdopen (sys.stdout.fileno (), 'w', 0)
     path = os.path.abspath (sys.argv[0])
