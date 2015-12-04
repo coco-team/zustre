@@ -276,7 +276,7 @@ def parseArgs (argv):
                     default=False, action='store_true')
     p.add_argument ('--verbose', help='Verbose', action='store_true',
                     default=False, dest="verbose")
-    p.add_argument ('--no_simp', help='Z3 simplification', action='store_false',
+    p.add_argument ('--no-simp', help='Z3 simplification', action='store_false',
                     default=True, dest="simp")
     p.add_argument ('--invs', help='Additional invariants', default=None)
     p.add_argument ('--node', help='Specify top node (default:top)'
@@ -287,7 +287,7 @@ def parseArgs (argv):
                     help='Directly encoded file in SMT2 Format')
     p.add_argument ('--to-smt', dest='tosmt', default=False, action='store_true',
                        help='Print Horn Clause in SMT Format')
-    p.add_argument ('--no_solving', dest='no_solving', default=False, action='store_true',
+    p.add_argument ('--no-solving', dest='no_solving', default=False, action='store_true',
                     help='Generate only Horn clauses, i.e. do not solve')
     p.add_argument ('--validate', help='Validate generated contract with Kind2', action='store_true',
                     default=False, dest="kind2")

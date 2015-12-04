@@ -3,6 +3,7 @@
 import sys
 import os
 import os.path
+import stats
 
 def parseArgs (argv):
     import argparse as a
@@ -53,14 +54,13 @@ def stat (key, val): stats.put (key, val)
 
 def main (argv):
     from zustre import Zustre
+
     import z3
     args = parseArgs (argv[1:])
     stat ('Result', 'UNKNOWN')
     ctx = z3.Context ()
     fp = z3.Fixedpoint (ctx=ctx)
     zus = Zustre(args,ctx,fp)
-    if args.regTest:
-
     if args.no_solving:
         zus.encode()
     else:
