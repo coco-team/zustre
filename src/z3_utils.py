@@ -1,5 +1,5 @@
-# import z3
-# import z3core
+import z3
+import z3core
 
 def nnf (e): return z3.Tactic ('nnf').apply (e)
 
