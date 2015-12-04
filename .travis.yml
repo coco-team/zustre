@@ -25,15 +25,11 @@ script:
   - cp -r $LZ/* run
   - ls run
   - /usr/bin/cmake -DLUSTREC_EXECUTABLE=run/bin/lustrec -DZ3_ROOT=run -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=run/bin/ -DCMAKE_PROGRAM_PATH=/usr/bin  ../;
-
-after_failure: "cat /home/travis/build/seahorn/seahorn/build/llvm-prefix/src/llvm-stamp/llvm-build-*.log"
-
-after_script:
-  - /usr/bin/cmake --build . > ./build.log 2>&1
-  - /usr/bin/cmake --build . --target install > ./build.log 2>&1
+  - /usr/bin/cmake --build .
+  - /usr/bin/cmake --build . --target install 
   - cd ..
   - ls build/run/bin
-  - ./build/run/bin/zustre -h
+  - ./build/run/bin/zustre -h 
 
 
 
