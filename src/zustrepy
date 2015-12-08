@@ -6,7 +6,7 @@ import os.path
 
 def parseArgs (argv):
     import argparse as a
-    p = a.ArgumentParser (description='Zustre: A verification and contract generation engine for Lustre Programs')
+    p = a.ArgumentParser (description='\t Zustre: A fully automated verification and contract generation engine for Lustre Programs')
 
     p.add_argument ('file', metavar='BENCHMARK', help='Benchmark file')
     p.add_argument ('--pp',
@@ -51,11 +51,9 @@ def parseArgs (argv):
 
 def stat (key, val): stats.put (key, val)
 
-def main (argv):
+def main (args):
     from zustre import Zustre
-
     import z3
-    args = parseArgs (argv[1:])
     stat ('Result', 'UNKNOWN')
     ctx = z3.Context ()
     fp = z3.Fixedpoint (ctx=ctx)
@@ -78,14 +76,14 @@ if __name__ == '__main__':
 
     path = os.path.abspath (os.path.join(path, '..', 'lib', 'zustrepy', 'src'))
     if os.path.isdir (path): sys.path.insert(0, path)
-
-    z3_path = os.path.abspath (os.path.join(path, '..', 'lib', 'z3py'))
-    if os.path.isdir (z3_path): sys.path.insert(0, z3_path)
+    z3_path = os.path.abspath (os.path.join(path, '..', '..', '..', 'lib', 'z3py'))
+    if os.path.isdir (z3_path):   sys.path.insert(0, z3_path)
 
     res = None
     import stats
+    args = parseArgs(sys.argv[1:])
     try:
-        main (sys.argv)
+        main (args)
     finally:
-        stats.brunch_print ()
+        if args.xml: stats.brunch_print ()
     sys.exit (res)

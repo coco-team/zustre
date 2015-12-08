@@ -153,16 +153,6 @@ class Zustre(object):
         with stats.timer ('Parse'):
             self.log.info('Successful Horn VCC generation ... ' + str(hornFormulas))
             q = self.fp.parse_file (hornFormulas)
-            # if self.args.tosmt:
-            #     s = z3.Solver()
-            #     self.log.info("Printing Horn in SMT format")
-            #     with open(hornFormulas, 'r') as f:
-            #         h = f.readlines()
-            #         for line in h:
-            #             print to_smtlib(line)
-
-
-            #     return
         preds = fp_get_preds(self.fp) # get the predicates before z3 starts playing with them
         if self.args.invs :
             lemmas = z3.parse_smt2_file (args.invs, sorts={}, decls={}, ctx=ctx)
@@ -180,6 +170,7 @@ class Zustre(object):
             elif res == z3.unsat:
                 stat ('Result', 'SAFE')
                 if self.args.xml: stats.xml_print(self.args.node, None)
+                if self.args.ass: self.mk_ass(preds)
                 if self.args.cg: self.mk_contract (preds)
             else:
                 if self.args.xml: stats.xml_print(self.args.node, None)
@@ -190,6 +181,10 @@ class Zustre(object):
                 os.remove(self.trace_file)
             except:
                 return
+
+    def mk_ass(self, preds):
+        self.log.info("Making assumption ... ")
+        print preds
 
     def encode(self):
         """generate CHC and not solve"""
@@ -287,6 +282,8 @@ def parseArgs (argv):
                     help='Directly encoded file in SMT2 Format')
     p.add_argument ('--to-smt', dest='tosmt', default=False, action='store_true',
                        help='Print Horn Clause in SMT Format')
+    p.add_argument ('--ass', help='Generate CoCoSpec Assumptions', action='store_true',
+                    default=False, dest="ass")
     p.add_argument ('--no-solving', dest='no_solving', default=False, action='store_true',
                     help='Generate only Horn clauses, i.e. do not solve')
     p.add_argument ('--validate', help='Validate generated contract with Kind2', action='store_true',
