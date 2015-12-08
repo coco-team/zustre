@@ -6,10 +6,9 @@
 # Author: Leonardo de Moura (leonardo)
 # Modifed by Temesghen Kahsai (Nasa Ames / CMU)
 ############################################
-import sys, io
-#z3
-# from z3consts import *
-# from z3core import *
+import sys, io, z3
+from z3consts import *
+from z3core import *
 
 
 ##############################
