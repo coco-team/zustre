@@ -18,7 +18,7 @@ root = os.path.dirname (os.path.dirname (os.path.realpath (__file__)))
 verbose=False
 xml=False
 
-class Zustre():
+class Zustre(object):
     def __init__(self, args, ctx, fp):
         self.log = LoggingManager.get_logger(__name__)
         self.args = args
