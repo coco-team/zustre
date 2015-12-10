@@ -13,11 +13,12 @@ import stats
 from kind2 import Kind2
 from Cex import Cex
 
+
 root = os.path.dirname (os.path.dirname (os.path.realpath (__file__)))
 verbose=False
 xml=False
 
-class Zustre(object):
+class Zustre():
     def __init__(self, args, ctx, fp):
         self.log = LoggingManager.get_logger(__name__)
         self.args = args
@@ -28,7 +29,6 @@ class Zustre(object):
         self.trace_file = None
         if self.args.xml: LoggingManager.disable_logger()
         return
-
 
 
     def isexec (self, fpath):
@@ -125,8 +125,6 @@ class Zustre(object):
         cex = Cex(self.args, self.ctx, self.fp, preds, self.coco)
         return cex.get_cex_xml()
 
-
-
     def encodeAndSolve(self):
         #Generate horn formulas and solve
         self.fp.set (engine='spacer')
@@ -147,22 +145,13 @@ class Zustre(object):
             self.fp.set ('xform.inline_eager',False)
 
         hornFormulas = self.args.file if self.args.smt2 else self.mk_horn()
+        cex = None
         if not hornFormulas:
             self.log.error('Problem generating Horn formulae')
             return
         with stats.timer ('Parse'):
             self.log.info('Successful Horn VCC generation ... ' + str(hornFormulas))
             q = self.fp.parse_file (hornFormulas)
-            # if self.args.tosmt:
-            #     s = z3.Solver()
-            #     self.log.info("Printing Horn in SMT format")
-            #     with open(hornFormulas, 'r') as f:
-            #         h = f.readlines()
-            #         for line in h:
-            #             print to_smtlib(line)
-
-
-            #     return
         preds = fp_get_preds(self.fp) # get the predicates before z3 starts playing with them
         if self.args.invs :
             lemmas = z3.parse_smt2_file (args.invs, sorts={}, decls={}, ctx=ctx)
@@ -175,21 +164,21 @@ class Zustre(object):
             res = self.fp.query (q[0])
             if res == z3.sat:
                 stat ('Result', 'CEX')
-                signal_cex_xml = self.mk_cex(preds)
-                stats.xml_print(self.args.node, signal_cex_xml)
+                cex = self.mk_cex(preds)
             elif res == z3.unsat:
                 stat ('Result', 'SAFE')
-                if self.args.xml: stats.xml_print(self.args.node, None)
                 if self.args.cg: self.mk_contract (preds)
-            else:
-                if self.args.xml: stats.xml_print(self.args.node, None)
         if not self.args.save:
-            self.log.info("Cleaning up temp files ...")
+            self.log.debug("Cleaning up temp files ...")
             try:
                 os.remove(self.smt2_file)
                 os.remove(self.trace_file)
             except:
-                return
+                self.log.info('No Cleaning of temp files ...')
+        if self.args.xml:
+            stats.xml_print(self.args.node, cex)
+        else:
+            stats.brunch_print()
 
     def encode(self):
         """generate CHC and not solve"""
@@ -323,7 +312,8 @@ def main (argv):
 if __name__ == '__main__':
     res = None
     try:
-        main (sys.argv)
+        res = main (sys.argv)
     finally:
+        print xml
         if not xml: stats.brunch_print ()
     sys.exit (res)

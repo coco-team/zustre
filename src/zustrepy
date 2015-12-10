@@ -3,6 +3,10 @@
 import sys
 import os
 import os.path
+import threading
+from multiprocessing import Process, Pool
+import multiprocessing
+
 
 def parseArgs (argv):
     import argparse as a
@@ -41,15 +45,20 @@ def parseArgs (argv):
                     default=False, dest="utvpi")
     p.add_argument ('--reg-test', help='Run regression tests', action='store_true',
                       default=False, dest="regTest")
+    p.add_argument ('--timeout', help='Timeout',
+                    type=float, default=20.0, dest="timeout")
     pars = p.parse_args (argv)
     global verbose
     verbose = pars.verbose
     global xml
     xml = pars.xml
+    global timeout
+    timeout = pars.timeout
     return pars
 
 
 def stat (key, val): stats.put (key, val)
+
 
 def main (args):
     from zustre import Zustre
@@ -78,12 +87,17 @@ if __name__ == '__main__':
     if os.path.isdir (path): sys.path.insert(0, path)
     z3_path = os.path.abspath (os.path.join(path, '..', '..', '..', 'lib', 'z3py'))
     if os.path.isdir (z3_path):   sys.path.insert(0, z3_path)
-
-    res = None
     import stats
     args = parseArgs(sys.argv[1:])
     try:
-        main (args)
-    finally:
-        if args.xml: stats.brunch_print ()
-    sys.exit (res)
+        p = multiprocessing.Process(target=main, args=(args,))
+        p.start()
+        p.join(args.timeout)
+        if p.is_alive():
+            stat('Result','TIMEOUT')
+            stats.brunch_print()
+            p.terminate()
+            p.join()
+        #main (args)
+    except Exception as e:
+        print str(e)

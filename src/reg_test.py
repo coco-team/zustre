@@ -101,17 +101,19 @@ def run_reg_test():
         get_horn_regression()
         reg_dir = os.path.join(root, 'horn_regression')
         print 'Horn Regression Path ... ' + str(reg_dir)
-        p = multiprocessing.Pool()
         safe_dir = os.path.join(reg_dir,'safe')
         cex_dir = os.path.join(reg_dir,'cex')
-        print '\t -----------  SAFE TEST  ---------- '
-        for f in glob.glob(safe_dir+os.sep+"*.lus"):
-            run (f, 'SAFE')
-        print '\t -----------  CEX TEST  ---------- '
-        for f in glob.glob(cex_dir+os.sep+"*.lus"):
-            run (f, 'CEX')
-
-
+        s_test =  glob.glob(safe_dir+os.sep+"*.lus")
+        f_test =  glob.glob(cex_dir+os.sep+"*.lus")
+        if len(s_test)== 0 and len(f_test)==0:
+            print "No Test To Run"
+        else:
+            print '\t -----------  SAFE TEST  ---------- '
+            for f in s_test:
+                run (f, 'SAFE')
+            print '\t -----------  CEX TEST  ---------- '
+            for f in f_test:
+                run (f, 'CEX')
     except Exception as e:
         print str(e)
 
