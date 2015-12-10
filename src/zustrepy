@@ -41,6 +41,8 @@ def parseArgs (argv):
                     default=False, dest="utvpi")
     p.add_argument ('--reg-test', help='Run regression tests', action='store_true',
                       default=False, dest="regTest")
+    p.add_argument ('--ass', help='Generate CoCoSpec Assumptions', action='store_true',
+                    default=False, dest="ass")
     pars = p.parse_args (argv)
     global verbose
     verbose = pars.verbose

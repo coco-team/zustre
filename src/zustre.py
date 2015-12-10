@@ -126,6 +126,14 @@ class Zustre(object):
         return cex.get_cex_xml()
 
 
+    def mk_ass(self, preds):
+        self.log.info("Making assumption ... ")
+        for p in preds:
+            lemmas = fp_get_cover_delta (self.fp, p)
+            print p.decl()
+            print to_smtlib(lemmas)
+
+
 
     def encodeAndSolve(self):
         #Generate horn formulas and solve
@@ -182,9 +190,6 @@ class Zustre(object):
             except:
                 return
 
-    def mk_ass(self, preds):
-        self.log.info("Making assumption ... ")
-        print preds
 
     def encode(self):
         """generate CHC and not solve"""
