@@ -40,21 +40,20 @@ Zustre and dependencies are installed in `build/run`
 ```
 
 ### Options ###
-* -h, --help         show this help message and exit
-* --pp               Enable default pre-processing
-* --trace TRACE      Trace levels to enable
-* --stat             Print statistics
-* --verbose          Verbose
-* --no-simp          Z3 simplification
-* --invs INVS        Additional invariants
-* --node NODE        Specify top node (default:top)
-* --cg               Generate modular contrats
-* --smt2             Directly encoded file in SMT2 Format
-* --no-solving       Generate only Horn clauses, i.e. do not solve
-* --xml              Output result in XML format
-* --save             Save intermediate files
-* --no-dl            Disable Difference Logic (UTVPI) in SPACER
-* --timeout TIMEOUT  Timeout
+* `-h, --help`         show this help message and exit
+* `--pp`               Enable default pre-processing
+* `--trace TRACE`      Trace levels to enable
+* `--stat`             Print statistics
+* `--verbose`          Verbose
+* `--no-simp`          Z3 simplification
+* `--node NODE`        Specify top node (default:top)
+* `--cg`               Generate modular contrats
+* `--smt2`             Directly encoded file in SMT2 Format
+* `--no-solving`       Generate only Horn clauses, i.e. do not solve
+* `--xml`              Output result in XML format
+* `--save`             Save intermediate files
+* `--no-dl`            Disable Difference Logic (UTVPI) in SPACER
+* `--timeout TIMEOUT`  Set timeout for solving
 
 
 ### Contact ###
