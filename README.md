@@ -20,7 +20,7 @@ Zustre is distributed under a modified BSD license. See [LICENSE](LICENSE) for d
 
 *  Build separately [LustreC](https://github.com/coco-team/lustrec) 
 * `cd zustre ; mkdir build ; cd build`
-* `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=run -DLUSTREC_EXECUTABLE=LUSTREC ../ ` where `LUSTREC_BIN` is the directory containing the lustrec binary.
+* `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=run -DLUSTREC_EXECUTABLE=LUSTREC_BIN ../ ` where `LUSTREC_BIN` is the directory containing the lustrec binary.
 * `cmake --build .` to build zustre
 * `cmake --build . --target install` to install everything in `run` directory
 * `cmake --build . --target package` to package everything.
@@ -40,8 +40,22 @@ Zustre and dependencies are installed in `build/run`
 ```
 
 ### Options ###
+* -h, --help         show this help message and exit
+* --pp               Enable default pre-processing
+* --trace TRACE      Trace levels to enable
+* --stat             Print statistics
+* --verbose          Verbose
+* --no-simp          Z3 simplification
+* --invs INVS        Additional invariants
+* --node NODE        Specify top node (default:top)
+* --cg               Generate modular contrats
+* --smt2             Directly encoded file in SMT2 Format
+* --no-solving       Generate only Horn clauses, i.e. do not solve
+* --xml              Output result in XML format
+* --save             Save intermediate files
+* --no-dl            Disable Difference Logic (UTVPI) in SPACER
+* --timeout TIMEOUT  Timeout
 
-* --xml : Output result in xml format 
 
 ### Contact ###
 * Temesghen Kahsai (NASA Ames / CMU)
