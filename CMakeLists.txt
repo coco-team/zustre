@@ -148,5 +148,4 @@ if (EXISTS ${CMAKE_CURRENT_BINARY_DIR}/z3-prefix/src/z3/build)
     )
   install(FILES ${z3py} DESTINATION lib/z3py)
 endif()
-
 add_subdirectory(src)
