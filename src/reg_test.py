@@ -90,6 +90,7 @@ def run(file, typ):
     cmd = [zustre, '--no-dl', file]
     p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     res, _ = p.communicate()
+    print res
     if typ in res:
         print bcolors.OK + str(file) + '\t ----->\t  OK ' + bcolors.ENDC
     else:
@@ -103,12 +104,8 @@ def run_reg_test():
         print 'Horn Regression Path ... ' + str(reg_dir)
         safe_dir = os.path.join(reg_dir,'safe')
         cex_dir = os.path.join(reg_dir,'cex')
-        print safe_dir, cex_dir
-        print  glob.glob(safe_dir)
         s_test =  glob.glob(safe_dir+os.sep+"*.lus")
         f_test =  glob.glob(cex_dir+os.sep+"*.lus")
-        print s_test
-        print f_test
         if len(s_test)== 0 and len(f_test)==0:
             print "No Test To Run"
         else:
