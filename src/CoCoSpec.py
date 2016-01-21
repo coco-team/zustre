@@ -61,7 +61,7 @@ class CoCoSpec(object):
         self.tac = CoCoTac(self.verbose, ctx)
 
     def addContract(self, pred, inv):
-        if self.verbose: self.log("addContact raw invariants", inv)
+        if self.verbose: self.log("addContract raw invariants", inv)
         tac = z3.Tactic('simplify', self.ctx)
         #s = tac.apply(inv)
         simplified =  z3.simplify(inv)

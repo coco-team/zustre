@@ -28,7 +28,9 @@ def parseArgs (argv):
     p.add_argument ('--node', help='Specify top node (default:top)'
                     , dest='node', default="top")
     p.add_argument ('--cg', dest='cg', default=False, action='store_true',
-                    help='Generate modular contrats')
+                    help='Generate CoCoSpec Contract')
+    p.add_argument ('--ri', dest='ri', default=False, action='store_true',
+                    help='Get Raw Invariants')
     p.add_argument ('--smt2', dest='smt2', default=False, action='store_true',
                     help='Directly encoded file in SMT2 Format')
     p.add_argument ('--to-smt', dest='tosmt', default=False, action='store_true',

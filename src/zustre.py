@@ -120,6 +120,14 @@ class Zustre(object):
                 self.log.exception(str(e))
 
 
+    def get_raw_invs(self, preds):
+        self.log.info('Getting raw invariants ... ')
+        for p in preds:
+            invs = fp_get_cover_delta(self.fp, p)
+            print "Predicate: " + str(p)
+            print "Invariants: \n\t" + str(invs)
+            print "----------------------------"
+
     def mk_cex(self, preds):
         self.log.info("Building CEX ... ")
         cex = Cex(self.args, self.ctx, self.fp, preds, self.coco)
@@ -167,6 +175,7 @@ class Zustre(object):
                 cex = self.mk_cex(preds)
             elif res == z3.unsat:
                 stat ('Result', 'SAFE')
+                if self.args.ri: self.get_raw_invs(preds)
                 if self.args.cg: self.mk_contract (preds)
         if not self.args.save:
             self.log.debug("Cleaning up temp files ...")
@@ -250,70 +259,71 @@ def fp_get_preds (fp):
     return res
 
 
-
-def parseArgs (argv):
-    import argparse as a
-    p = a.ArgumentParser (description='Zustre: A verification and contract generation engine for Lustre Programs')
-
-    p.add_argument ('file', metavar='BENCHMARK', help='Benchmark file')
-    p.add_argument ('--pp',
-                    help='Enable default pre-processing',
-                    action='store_true', default=False)
-    p.add_argument ('--trace', help='Trace levels to enable',
-                   default='')
-    p.add_argument ('--stat', help='Print statistics', dest="stat",
-                    default=False, action='store_true')
-    p.add_argument ('--verbose', help='Verbose', action='store_true',
-                    default=False, dest="verbose")
-    p.add_argument ('--no-simp', help='Z3 simplification', action='store_false',
-                    default=True, dest="simp")
-    p.add_argument ('--invs', help='Additional invariants', default=None)
-    p.add_argument ('--node', help='Specify top node (default:top)'
-                    , dest='node', default="top")
-    p.add_argument ('--cg', dest='cg', default=False, action='store_true',
-                    help='Generate modular contrats')
-    p.add_argument ('--smt2', dest='smt2', default=False, action='store_true',
-                    help='Directly encoded file in SMT2 Format')
-    p.add_argument ('--to-smt', dest='tosmt', default=False, action='store_true',
-                       help='Print Horn Clause in SMT Format')
-    p.add_argument ('--no-solving', dest='no_solving', default=False, action='store_true',
-                    help='Generate only Horn clauses, i.e. do not solve')
-    p.add_argument ('--validate', help='Validate generated contract with Kind2', action='store_true',
-                    default=False, dest="kind2")
-    p.add_argument ('--xml', help='Output result in XML format', action='store_true',
-                    default=False, dest="xml")
-    p.add_argument ('--save', help='Save intermediate files', action='store_true',
-                    default=False, dest="save")
-    p.add_argument ('--no_dl', help='Disable Difference Logic (UTVPI) in SPACER', action='store_true',
-                    default=False, dest="utvpi")
-    pars = p.parse_args (argv)
-    global verbose
-    verbose = pars.verbose
-    global xml
-    xml = pars.xml
-    return pars
-
-
 def stat (key, val): stats.put (key, val)
 
-def main (argv):
-    args = parseArgs (argv[1:])
-    stat ('Result', 'UNKNOWN')
-    ctx = z3.Context ()
-    fp = z3.Fixedpoint (ctx=ctx)
-    zus = Zustre(args,ctx,fp)
-    if args.no_solving:
-        zus.encode()
-    else:
-        #z3.set_option(zustre_mode=True)
-        zus.encodeAndSolve()
+# def parseArgs (argv):
+#     import argparse as a
+#     p = a.ArgumentParser (description='Zustre: A verification and contract generation engine for Lustre Programs')
+
+#     p.add_argument ('file', metavar='BENCHMARK', help='Benchmark file')
+#     p.add_argument ('--pp',
+#                     help='Enable default pre-processing',
+#                     action='store_true', default=False)
+#     p.add_argument ('--trace', help='Trace levels to enable',
+#                    default='')
+#     p.add_argument ('--stat', help='Print statistics', dest="stat",
+#                     default=False, action='store_true')
+#     p.add_argument ('--verbose', help='Verbose', action='store_true',
+#                     default=False, dest="verbose")
+#     p.add_argument ('--no-simp', help='Z3 simplification', action='store_false',
+#                     default=True, dest="simp")
+#     p.add_argument ('--invs', help='Additional invariants', default=None)
+#     p.add_argument ('--node', help='Specify top node (default:top)'
+#                     , dest='node', default="top")
+#     p.add_argument ('--cg', dest='cg', default=False, action='store_true',
+#                     help='Generate modular contrats')
+#     p.add_argument ('--smt2', dest='smt2', default=False, action='store_true',
+#                     help='Directly encoded file in SMT2 Format')
+#     p.add_argument ('--to-smt', dest='tosmt', default=False, action='store_true',
+#                        help='Print Horn Clause in SMT Format')
+#     p.add_argument ('--no-solving', dest='no_solving', default=False, action='store_true',
+#                     help='Generate only Horn clauses, i.e. do not solve')
+#     p.add_argument ('--validate', help='Validate generated contract with Kind2', action='store_true',
+#                     default=False, dest="kind2")
+#     p.add_argument ('--xml', help='Output result in XML format', action='store_true',
+#                     default=False, dest="xml")
+#     p.add_argument ('--save', help='Save intermediate files', action='store_true',
+#                     default=False, dest="save")
+#     p.add_argument ('--no_dl', help='Disable Difference Logic (UTVPI) in SPACER', action='store_true',
+#                     default=False, dest="utvpi")
+#     pars = p.parse_args (argv)
+#     global verbose
+#     verbose = pars.verbose
+#     global xml
+#     xml = pars.xml
+#     return pars
 
 
-if __name__ == '__main__':
-    res = None
-    try:
-        res = main (sys.argv)
-    finally:
-        print xml
-        if not xml: stats.brunch_print ()
-    sys.exit (res)
+
+
+# def main (argv):
+#     args = parseArgs (argv[1:])
+#     stat ('Result', 'UNKNOWN')
+#     ctx = z3.Context ()
+#     fp = z3.Fixedpoint (ctx=ctx)
+#     zus = Zustre(args,ctx,fp)
+#     if args.no_solving:
+#         zus.encode()
+#     else:
+#         #z3.set_option(zustre_mode=True)
+#         zus.encodeAndSolve()
+
+
+# if __name__ == '__main__':
+#     res = None
+#     try:
+#         res = main (sys.argv)
+#     finally:
+#         print xml
+#         if not xml: stats.brunch_print ()
+#     sys.exit (res)
