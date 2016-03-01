@@ -21,6 +21,8 @@ let
   late = false -> if pre late then (diff < 0)
                   else (diff <= -10);
 tel
+
+
 --subrange [0, 2] of int
 node top(beacon,second:bool) returns (OK:bool);
 var late,early: bool;

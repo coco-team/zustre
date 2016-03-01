@@ -133,8 +133,8 @@ class Zustre(object):
         cex = Cex(self.args, self.ctx, self.fp, preds, self.coco)
         return cex.get_cex_xml()
 
-    def encodeAndSolve(self):
-        #Generate horn formulas and solve
+    def setSolver(self):
+        """Set the configuration for the solver"""
         self.fp.set (engine='spacer')
         if self.args.stat:
             self.fp.set('print.statistics',True)
@@ -151,7 +151,11 @@ class Zustre(object):
             self.fp.set ('xform.slice', False)
             self.fp.set ('xform.inline_linear',False)
             self.fp.set ('xform.inline_eager',False)
+        return
 
+    def encodeAndSolve(self):
+        """Generate horn formulas and solve"""
+        self.setSolver()
         hornFormulas = self.args.file if self.args.smt2 else self.mk_horn()
         cex = None
         if not hornFormulas:
@@ -188,6 +192,21 @@ class Zustre(object):
             stats.xml_print(self.args.node, cex)
         else:
             stats.brunch_print()
+
+    def sFunction(self):
+        """Link the encoding with an externally generated Horn clause"""
+        self.log.info("Linking with externally generated Horn clauses ... " + str(self.args.sfunction))
+        self.setSolver()
+        with stats.timer ('S-Function-Parse'):
+            q = self.fp.parse_file (self.args.sfunction)
+        preds = fp_get_preds(self.fp) # get the predicates before z3 starts playing with them
+        res = self.fp.query (q[0])
+        if res == z3.sat:
+            stat('LegacyCode', 'OK')
+        else:
+            stat('LegacyCode', 'KO')
+        return
+
 
     def encode(self):
         """generate CHC and not solve"""

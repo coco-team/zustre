@@ -49,6 +49,7 @@ def parseArgs (argv):
                       default=False, dest="regTest")
     p.add_argument ('--timeout', help='Timeout',
                     type=float, default=20.0, dest="timeout")
+    p.add_argument ('--s-func', help='S Function', default=None, dest="sfunction")
     pars = p.parse_args (argv)
     global verbose
     verbose = pars.verbose
@@ -71,6 +72,8 @@ def main (args):
     zus = Zustre(args,ctx,fp)
     if args.no_solving:
         zus.encode()
+    elif args.sfunction:
+        zus.sFunction()
     else:
         zus.encodeAndSolve()
 
