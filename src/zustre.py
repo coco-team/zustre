@@ -9,9 +9,10 @@ from LogManager import LoggingManager
 import os,subprocess,sys
 import shutil
 from CoCoSpec import CoCoSpec
-import stats
 from kind2 import Kind2
 from Cex import Cex
+from sfunction import SFunction
+import utils
 
 
 root = os.path.dirname (os.path.dirname (os.path.realpath (__file__)))
@@ -75,7 +76,7 @@ class Zustre(object):
         lusFile = self.args.file
         self.log.info("Modular Hornification ... " + str(lusFile))
         hornDefs = None
-        with stats.timer('Lustre2Horn'):
+        with utils.stats.timer('Lustre2Horn'):
             top_node = 'top' if not self.args.node else self.args.node #TODO : check directly which node is top
 
             lusFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
@@ -137,7 +138,7 @@ class Zustre(object):
         """Set the configuration for the solver"""
         self.fp.set (engine='spacer')
         if self.args.stat:
-            self.fp.set('print.statistics',True)
+            self.fp.set('print.utils.statistics',True)
         self.fp.set('use_heavy_mev',True)
         self.fp.set('pdr.flexible_trace',True)
         self.fp.set('reset_obligation_queue',False)
@@ -161,10 +162,10 @@ class Zustre(object):
         if not hornFormulas:
             self.log.error('Problem generating Horn formulae')
             return
-        with stats.timer ('Parse'):
+        with utils.stats.timer ('Parse'):
             self.log.info('Successful Horn VCC generation ... ' + str(hornFormulas))
             q = self.fp.parse_file (hornFormulas)
-        preds = fp_get_preds(self.fp) # get the predicates before z3 starts playing with them
+        preds = utils.fp_get_preds(self.fp) # get the predicates before z3 starts playing with them
         if self.args.invs :
             lemmas = z3.parse_smt2_file (args.invs, sorts={}, decls={}, ctx=ctx)
             if z3.is_and (lemmas):
@@ -172,13 +173,13 @@ class Zustre(object):
             for l in lemmas:
                 if verbose: print l
                 fp_add_cover (self.fp, l.arg(0), l.arg(1))
-        with stats.timer ('Query'):
+        with utils.stats.timer ('Query'):
             res = self.fp.query (q[0])
             if res == z3.sat:
-                stat ('Result', 'CEX')
+                utils.stat ('Result', 'CEX')
                 cex = self.mk_cex(preds)
             elif res == z3.unsat:
-                stat ('Result', 'SAFE')
+                utils.stat ('Result', 'SAFE')
                 if self.args.ri: self.get_raw_invs(preds)
                 if self.args.cg: self.mk_contract (preds)
         if not self.args.save:
@@ -189,23 +190,22 @@ class Zustre(object):
             except:
                 self.log.info('No Cleaning of temp files ...')
         if self.args.xml:
-            stats.xml_print(self.args.node, cex)
+            utils.stats.xml_print(self.args.node, cex)
         else:
-            stats.brunch_print()
+            utils.stats.brunch_print()
 
     def sFunction(self):
         """Link the encoding with an externally generated Horn clause"""
-        self.log.info("Linking with externally generated Horn clauses ... " + str(self.args.sfunction))
-        self.setSolver()
-        with stats.timer ('S-Function-Parse'):
-            q = self.fp.parse_file (self.args.sfunction)
-        preds = fp_get_preds(self.fp) # get the predicates before z3 starts playing with them
-        res = self.fp.query (q[0])
-        if res == z3.sat:
-            stat('LegacyCode', 'OK')
+        sf = SFunction(self.args)
+        if sf.sanityCheck():
+            utils.stat('LegacyCode', 'OK')
+            self.log.info('Legacy Code is well formed ...')
+            sf.getFiller()
+            self.encodeAndSolve()
         else:
-            stat('LegacyCode', 'KO')
-        return
+            utils.stat('LegacyCode', 'KO')
+            self.log.error('Legacy Code Horn Clause is NOT well formed ... ')
+            return
 
 
     def encode(self):
@@ -213,72 +213,12 @@ class Zustre(object):
         hornFormulas = mk_horn()
         if not hornFormulas:
             self.log.error('Problem generating Horn formulae')
-            stat ('Result', 'ERR')
+            utils.stat ('Result', 'ERR')
         else:
-            stat ('Result', 'SUCCESS')
+            utils.stat ('Result', 'SUCCESS')
         return hornFormulas
 
 
-
-def fp_add_cover (fp, pred, lemma, level=-1):
-    # no trivial lemmas
-    if z3.is_true (lemma): return
-
-    assert (z3.is_app (pred))
-    sub = []
-    for i in range (0, pred.num_args ()):
-        arg = pred.arg (i)
-        sub.append ((arg,
-                     z3.Var (i, arg.decl ().range ())))
-
-    tlemma = z3.substitute (lemma, sub)
-    if verbose:
-        print "Lemma for ", pred.decl (), ": ", tlemma
-    fp.add_cover (level, pred.decl (), tlemma)
-
-
-def fp_get_cover_delta (fp, pred, level=-1):
-    sub = []
-    for i in range (0, pred.num_args ()):
-        sub.append (pred.arg (i))
-    lemma = fp.get_cover_delta (level, pred.decl ())
-    if z3core.Z3_get_bool_value (fp.ctx.ctx, lemma.as_ast ()) != z3.unsat:
-        lemma = z3.substitute_vars (lemma, *sub)
-    return lemma
-
-
-def fp_get_predicates (fp):
-    return find_atomic_terms \
-        (mk_nary (z3.And, mk_true (fp.ctx),
-                      fp.get_rules ()))
-
-def fp_get_preds (fp):
-    seen = set ()
-    res = list ()
-    for rule in fp.get_rules ():
-        pred = rule
-        # A rule is of the form
-        # FORALL? (BODY IMPLIES)? PRED
-        if z3.is_quantifier (pred): pred = pred.body ()
-        if is_implies (pred): pred = pred.arg (1)
-
-        decl = pred.decl ()
-        assert is_uninterpreted (decl)
-        if z3key (decl) in seen: continue
-        seen.add (z3key (decl))
-
-        # if the rule contains a universal quantifier, replace
-        # variables by properly named constants
-        if z3.is_quantifier (rule):
-            sub = [ z3.Const (bound_var_name (rule, i),
-                              bound_var_sort (rule, i))
-                    for i in range (0, rule.num_vars ()) ]
-            pred = substitute_vars (pred, *sub)
-        res.append (pred)
-    return res
-
-
-def stat (key, val): stats.put (key, val)
 
 # def parseArgs (argv):
 #     import argparse as a
@@ -290,7 +230,7 @@ def stat (key, val): stats.put (key, val)
 #                     action='store_true', default=False)
 #     p.add_argument ('--trace', help='Trace levels to enable',
 #                    default='')
-#     p.add_argument ('--stat', help='Print statistics', dest="stat",
+#     p.add_argument ('--utils.stat', help='Print utils.statistics', dest="utils.stat",
 #                     default=False, action='store_true')
 #     p.add_argument ('--verbose', help='Verbose', action='store_true',
 #                     default=False, dest="verbose")
@@ -327,7 +267,7 @@ def stat (key, val): stats.put (key, val)
 
 # def main (argv):
 #     args = parseArgs (argv[1:])
-#     stat ('Result', 'UNKNOWN')
+#     utils.stat ('Result', 'UNKNOWN')
 #     ctx = z3.Context ()
 #     fp = z3.Fixedpoint (ctx=ctx)
 #     zus = Zustre(args,ctx,fp)
@@ -344,5 +284,5 @@ def stat (key, val): stats.put (key, val)
 #         res = main (sys.argv)
 #     finally:
 #         print xml
-#         if not xml: stats.brunch_print ()
+#         if not xml: utils.stats.brunch_print ()
 #     sys.exit (res)
