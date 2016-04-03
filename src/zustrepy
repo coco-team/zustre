@@ -50,6 +50,7 @@ def parseArgs (argv):
     p.add_argument ('--timeout', help='Timeout',
                     type=float, default=20.0, dest="timeout")
     p.add_argument ('--s-func', help='S-Function', default=None, dest="sfunction")
+    p.add_argument ('--eldarica', help='Use Eldarica', default =False, action='store_true', dest="eldarica")
     pars = p.parse_args (argv)
     global verbose
     verbose = pars.verbose
@@ -74,6 +75,8 @@ def main (args):
         zus.encode()
     elif args.sfunction:
         zus.sFunction()
+    elif args.eldarica:
+        zus.eldarica()
     else:
         zus.encodeAndSolve()
 

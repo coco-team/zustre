@@ -59,6 +59,18 @@ class Zustre(object):
             raise IOError ("Cannot find LustreC")
         return lustrec
 
+    def getEldarica (self):
+        eldarica = None
+        # if 'LUSTREC' in os.environ:
+        #     lustrec = os.environ ['LUSTREC']
+        if not self.isexec (eldarica):
+            eldarica = os.path.abspath (os.path.join(root, '..', '..', 'bin','eldarica', 'eld'))
+
+
+        if not self.isexec (eldarica):
+            raise IOError ("Cannot find Princess")
+        return eldarica
+
 
     def getKind2 (self):
         kind2 = None
@@ -143,6 +155,7 @@ class Zustre(object):
         self.fp.set('pdr.flexible_trace',True)
         self.fp.set('reset_obligation_queue',False)
         self.fp.set('spacer.elim_aux',False)
+        if self.args.eldarica: self.fp.set(':print_fixedpoint_extensions',False)
         if self.args.utvpi: self.fp.set('pdr.utvpi', False)
         if self.args.tosmt:
             self.log.info("Setting low level printing")
@@ -193,6 +206,49 @@ class Zustre(object):
             utils.stats.xml_print(self.args.node, cex)
         else:
             utils.stats.brunch_print()
+
+    def eldarica(self):
+        """Generate horn formulas and solve with Eldarica"""
+        self.setSolver()
+        hornFormulas = self.mk_horn()
+        if not hornFormulas:
+            self.log.error('Problem generating Horn formulae')
+            return
+        with utils.stats.timer ('Parse'):
+            self.log.info('Successful Horn VC generation ... ' + str(hornFormulas))
+            q = self.fp.parse_file (hornFormulas)
+            utils.stats.stop('Parse')
+            # print pure smtlib format
+            lusFile = self.args.file
+            lusFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
+            base = (os.path.splitext(os.path.basename(lusFile)))[0]
+            smt2_name = lusFile_dir + base + "_puresmt2.smt2"
+            sf = open(smt2_name, 'w')
+            puresmt2 = self.fp.to_string(q)
+            sf.write(puresmt2)
+            sf.close()
+            self.log.info("Running Eldarica ... ")
+            with utils.stats.timer('Eldarica'):
+                 cmd = [self.getEldarica(), smt2_name]
+                 print cmd
+                 p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                 eldaricaOut, _ = p.communicate()
+                 print eldaricaOut
+                 if 'sat' in eldaricaOut:
+                     utils.stat ('Result', 'SAFE')
+                 elif 'unsat' in eldaricaOut:
+                     utils.stat('Result', 'CEX')
+                 else:
+                     utils.stat('Result', 'UNKNOWN')
+                 utils.stats.stop('Eldarica')
+            if self.args.xml:
+                utils.stats.xml_print(self.args.node, cex)
+            else:
+                utils.stats.brunch_print()
+
+
+
+
 
     def sFunction(self):
         """Link the encoding with an externally generated Horn clause"""
