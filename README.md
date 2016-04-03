@@ -1,5 +1,3 @@
-
-[![Code Issues](http://www.quantifiedcode.com/api/v1/project/f01b6e8e42264a9db43a4221e4ebdb51/badge.svg)](http://www.quantifiedcode.com/app/project/f01b6e8e42264a9db43a4221e4ebdb51)
 [![Build Status](https://travis-ci.org/coco-team/zustre.svg)](https://travis-ci.org/coco-team/zustre)
 
 # Zustre #
@@ -9,21 +7,27 @@ Zustre is a modular SMT-based PDR-style verification engine for Lustre programs.
 ##License##
 Zustre is distributed under a modified BSD license. See [LICENSE](LICENSE) for details.
 
-### Dependencies ###
+## Demo ##
+[![asciicast](https://asciinema.org/a/78zgw3okcem06qcdrp2n3g2yh.png)](https://asciinema.org/a/78zgw3okcem06qcdrp2n3g2yih?autoplay=1?loop=1)
+
+
+## Dependencies ##
 
 * [LustreC (Lustre compiler)](https://github.com/coco-team/lustrec)
 * [SPACER (PDR engine)](http://spacer.bitbucket.org/)
-* Python v. 2.7.
+* (Optional) [Eldarica (Horn Clause solver)](https://github.com/uuverifiers/eldarica)
+* Python v. 2.7. (or up)
 
 
 ##Compilation##
 
-*  Build separately [LustreC](https://github.com/coco-team/lustrec) 
+*  Build separately [LustreC](https://github.com/coco-team/lustrec)
 * `cd zustre ; mkdir build ; cd build`
 * `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=run -DLUSTREC_EXECUTABLE=LUSTREC_BIN ../ ` where `LUSTREC_BIN` is the directory containing the lustrec binary.
 * `cmake --build .` to build zustre
 * `cmake --build . --target install` to install everything in `run` directory
 * `cmake --build . --target package` to package everything.
+* (Optional) To use Eldarica just copy the eldarica binary under `build\run\bin`
 
 Zustre and dependencies are installed in `build/run`
 
@@ -37,6 +41,11 @@ Zustre and dependencies are installed in `build/run`
 * To generate CoCoSpec contract of Lustre code:
 ```
 > ./build/run/bin/zustre [LUSTRE_FILE] --cg --node [OBSERVER NODE (default: top)]
+```
+
+* To use Eldarica as the backend solver:
+```
+> ./build/run/bin/zustre --eldarica [LUSTRE_FILE] --node [OBSERVER NODE (default: top)]
 ```
 
 ### Options ###
@@ -54,8 +63,9 @@ Zustre and dependencies are installed in `build/run`
 * `--save`             Save intermediate files
 * `--no-dl`            Disable Difference Logic (UTVPI) in SPACER
 * `--timeout TIMEOUT`  Set timeout for solving
+* `--eldarica`         Use Eldarica as the backend solver
 
 
 ### Contact ###
-* Temesghen Kahsai (NASA Ames / CMU)
-* Arie Gurfinkel (SEI / CMU)
+* [Temesghen Kahsai](www.lememta.info) (NASA Ames / CMU)
+* [Arie Gurfinkel](http://arieg.bitbucket.org/) (SEI / CMU)

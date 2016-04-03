@@ -6,7 +6,7 @@ var a,b:bool;
 let
   a = false -> not pre(b);
   b = false -> pre(a);
-  out = a and b;
+  out = a or b;
 tel
 
 node intloopcounter (x:bool) returns (out:bool);
@@ -24,6 +24,5 @@ let
   b = greycounter(x);
   d = intloopcounter(x);
   OK = b = d;
-  --!PROPERTY : OK=true;
-  --!MAIN : true;
+  --%PROPERTY OK=true;
 tel

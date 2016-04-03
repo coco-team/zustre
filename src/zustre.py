@@ -33,10 +33,12 @@ class Zustre(object):
 
 
     def isexec (self, fpath):
+        """ check if program is executable"""
         if fpath == None: return False
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
     def which(self,program):
+        """ check locaton of a program"""
         fpath, fname = os.path.split(program)
         if fpath:
             if isexec (program):
@@ -49,6 +51,7 @@ class Zustre(object):
         return None
 
     def getLustreC (self):
+        """ Get the binary location """
         lustrec = None
         # if 'LUSTREC' in os.environ:
         #     lustrec = os.environ ['LUSTREC']
@@ -60,6 +63,7 @@ class Zustre(object):
         return lustrec
 
     def getEldarica (self):
+        """ Get the binary location """
         eldarica = None
         # if 'LUSTREC' in os.environ:
         #     lustrec = os.environ ['LUSTREC']
@@ -73,6 +77,7 @@ class Zustre(object):
 
 
     def getKind2 (self):
+        """ Get the binary location """
         kind2 = None
         if 'KIND2' in os.environ:
             kind2 = os.environ ['KIND2']
@@ -112,12 +117,13 @@ class Zustre(object):
 
 
     def mk_contract (self, preds):
+        """ construct coco contract"""
         lusFile = self.args.file
         self.log.info("Building CoCoSpec ...")
         #s = z3.Solver(ctx=fp.ctx) # to build an SMT formula
         for p in preds:
             # create an app by creating dummy variables using p.arity () and p.domain()
-            lemmas = fp_get_cover_delta (self.fp, p)
+            lemmas = utils.fp_get_cover_delta (self.fp, p)
             self.coco.addContract(p.decl(),lemmas)
         cocoFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
         cocoFileName = cocoFile_dir + os.path.basename(lusFile) + ".coco"
@@ -131,9 +137,11 @@ class Zustre(object):
                 kind2.validate(cocoFileName)
             except Exception as e:
                 self.log.exception(str(e))
+        return cocoFileName
 
 
     def get_raw_invs(self, preds):
+        """ Get unprocessed invariants """
         self.log.info('Getting raw invariants ... ')
         for p in preds:
             invs = fp_get_cover_delta(self.fp, p)
@@ -186,6 +194,7 @@ class Zustre(object):
             for l in lemmas:
                 if verbose: print l
                 fp_add_cover (self.fp, l.arg(0), l.arg(1))
+        contract_file = None
         with utils.stats.timer ('Query'):
             res = self.fp.query (q[0])
             if res == z3.sat:
@@ -194,7 +203,8 @@ class Zustre(object):
             elif res == z3.unsat:
                 utils.stat ('Result', 'SAFE')
                 if self.args.ri: self.get_raw_invs(preds)
-                if self.args.cg: self.mk_contract (preds)
+                if self.args.cg:
+                    contract_file = self.mk_contract (preds)
         if not self.args.save:
             self.log.debug("Cleaning up temp files ...")
             try:
@@ -203,7 +213,7 @@ class Zustre(object):
             except:
                 self.log.info('No Cleaning of temp files ...')
         if self.args.xml:
-            utils.stats.xml_print(self.args.node, cex)
+            utils.stats.xml_print(self.args.node, cex, contract_file)
         else:
             utils.stats.brunch_print()
 
@@ -223,26 +233,23 @@ class Zustre(object):
             lusFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
             base = (os.path.splitext(os.path.basename(lusFile)))[0]
             smt2_name = lusFile_dir + base + "_puresmt2.smt2"
-            sf = open(smt2_name, 'w')
-            puresmt2 = self.fp.to_string(q)
-            sf.write(puresmt2)
-            sf.close()
+            with open(smt2_name, 'w') as sf:
+                puresmt2 = self.fp.to_string(q)
+                sf.write(puresmt2)
             self.log.info("Running Eldarica ... ")
             with utils.stats.timer('Eldarica'):
-                 cmd = [self.getEldarica(), smt2_name]
-                 print cmd
+                 cmd = [self.getEldarica(), '-ssol', '-lbe', smt2_name]
                  p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                  eldaricaOut, _ = p.communicate()
-                 print eldaricaOut
                  if 'sat' in eldaricaOut:
                      utils.stat ('Result', 'SAFE')
                  elif 'unsat' in eldaricaOut:
                      utils.stat('Result', 'CEX')
                  else:
                      utils.stat('Result', 'UNKNOWN')
-                 utils.stats.stop('Eldarica')
+            utils.stats.stop('Eldarica')
             if self.args.xml:
-                utils.stats.xml_print(self.args.node, cex)
+                utils.stats.xml_print(self.args.node, cex, None)
             else:
                 utils.stats.brunch_print()
 
@@ -273,72 +280,3 @@ class Zustre(object):
         else:
             utils.stat ('Result', 'SUCCESS')
         return hornFormulas
-
-
-
-# def parseArgs (argv):
-#     import argparse as a
-#     p = a.ArgumentParser (description='Zustre: A verification and contract generation engine for Lustre Programs')
-
-#     p.add_argument ('file', metavar='BENCHMARK', help='Benchmark file')
-#     p.add_argument ('--pp',
-#                     help='Enable default pre-processing',
-#                     action='store_true', default=False)
-#     p.add_argument ('--trace', help='Trace levels to enable',
-#                    default='')
-#     p.add_argument ('--utils.stat', help='Print utils.statistics', dest="utils.stat",
-#                     default=False, action='store_true')
-#     p.add_argument ('--verbose', help='Verbose', action='store_true',
-#                     default=False, dest="verbose")
-#     p.add_argument ('--no-simp', help='Z3 simplification', action='store_false',
-#                     default=True, dest="simp")
-#     p.add_argument ('--invs', help='Additional invariants', default=None)
-#     p.add_argument ('--node', help='Specify top node (default:top)'
-#                     , dest='node', default="top")
-#     p.add_argument ('--cg', dest='cg', default=False, action='store_true',
-#                     help='Generate modular contrats')
-#     p.add_argument ('--smt2', dest='smt2', default=False, action='store_true',
-#                     help='Directly encoded file in SMT2 Format')
-#     p.add_argument ('--to-smt', dest='tosmt', default=False, action='store_true',
-#                        help='Print Horn Clause in SMT Format')
-#     p.add_argument ('--no-solving', dest='no_solving', default=False, action='store_true',
-#                     help='Generate only Horn clauses, i.e. do not solve')
-#     p.add_argument ('--validate', help='Validate generated contract with Kind2', action='store_true',
-#                     default=False, dest="kind2")
-#     p.add_argument ('--xml', help='Output result in XML format', action='store_true',
-#                     default=False, dest="xml")
-#     p.add_argument ('--save', help='Save intermediate files', action='store_true',
-#                     default=False, dest="save")
-#     p.add_argument ('--no_dl', help='Disable Difference Logic (UTVPI) in SPACER', action='store_true',
-#                     default=False, dest="utvpi")
-#     pars = p.parse_args (argv)
-#     global verbose
-#     verbose = pars.verbose
-#     global xml
-#     xml = pars.xml
-#     return pars
-
-
-
-
-# def main (argv):
-#     args = parseArgs (argv[1:])
-#     utils.stat ('Result', 'UNKNOWN')
-#     ctx = z3.Context ()
-#     fp = z3.Fixedpoint (ctx=ctx)
-#     zus = Zustre(args,ctx,fp)
-#     if args.no_solving:
-#         zus.encode()
-#     else:
-#         #z3.set_option(zustre_mode=True)
-#         zus.encodeAndSolve()
-
-
-# if __name__ == '__main__':
-#     res = None
-#     try:
-#         res = main (sys.argv)
-#     finally:
-#         print xml
-#         if not xml: utils.stats.brunch_print ()
-#     sys.exit (res)
