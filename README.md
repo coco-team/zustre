@@ -8,8 +8,8 @@ Zustre is a modular SMT-based PDR-style verification engine for Lustre programs.
 Zustre is distributed under a modified BSD license. See [LICENSE](LICENSE) for details.
 
 ## Demo ##
-[![asciicast](https://asciinema.org/a/78zgw3okcem06qcdrp2n3g2yh.png)](https://asciinema.org/a/78zgw3okcem06qcdrp2n3g2yih?autoplay=1?loop=1)
 
+<script type="text/javascript" src="https://asciinema.org/a/78zgw3okcem06qcdrp2n3g2yh.js" id="asciicast-78zgw3okcem06qcdrp2n3g2yh" async></script>
 
 ## Dependencies ##
 
