@@ -149,7 +149,7 @@ def xml_print(prop, cex, contract):
     print xml_cex % (prop, str(d),str(lus), str(parse), str(query),result, cex)
   else:
     if contract != None:
-      c_str = "<contractFile>" + str(contract)+ "<contractFile>"
+      c_str = "<contractFile>" + str(contract)+ "</contractFile>"
       print xml_valid % (prop, str(d),str(lus), str(parse), str(query),result, c_str)
     else:
       print xml_valid_no_contract % (prop, str(d),str(lus), str(parse), str(query),result)
