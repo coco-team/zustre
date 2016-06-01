@@ -51,10 +51,8 @@ class Zustre(object):
         return None
 
     def getLustreC (self):
-        """ Get the binary location """
+        """ Get the binary location for LustreC"""
         lustrec = None
-        # if 'LUSTREC' in os.environ:
-        #     lustrec = os.environ ['LUSTREC']
         if not self.isexec (lustrec):
             bin = os.path.abspath (os.path.join(root, '..', '..', 'bin'))
             lustrec = os.path.join (bin, "lustrec")
@@ -63,24 +61,17 @@ class Zustre(object):
         return lustrec
 
     def getEldarica (self):
-        """ Get the binary location """
+        """ Get the binary location for Eldarica"""
         eldarica = None
-        # if 'LUSTREC' in os.environ:
-        #     lustrec = os.environ ['LUSTREC']
         if not self.isexec (eldarica):
             eldarica = os.path.abspath (os.path.join(root, '..', '..', 'bin','eldarica', 'eld'))
-
-
         if not self.isexec (eldarica):
-            raise IOError ("Cannot find Princess")
+            raise IOError ("Cannot find Eldarica")
         return eldarica
 
-
     def getKind2 (self):
-        """ Get the binary location """
+        """ Get the binary location for Kind2"""
         kind2 = None
-        if 'KIND2' in os.environ:
-            kind2 = os.environ ['KIND2']
         if not self.isexec (kind2):
             lustrec = os.path.join (root, "bin/kind2")
         if not self.isexec (kind2):
@@ -89,15 +80,15 @@ class Zustre(object):
 
 
     def mk_horn(self):
-        """generate CHC """
+        """ Generate CHC using LustreC """
         lusFile = self.args.file
-        self.log.info("Modular Hornification ... " + str(lusFile))
+        self.log.info("Hornifiying ... " + str(lusFile))
         hornDefs = None
         with utils.stats.timer('Lustre2Horn'):
             top_node = 'top' if not self.args.node else self.args.node #TODO : check directly which node is top
-
             lusFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
             lustrec = self.getLustreC();
+            self.log.info("LustreC path ... " + str(lustrec))
             opt_traces = ["-horn-traces"] if self.args.cg else []
             cmd = [lustrec, "-horn", "-node", top_node, "-horn-query"] + opt_traces + ["-d", lusFile_dir, lusFile]
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -115,9 +106,8 @@ class Zustre(object):
                 self.log.error(hornDefs)
                 return None
 
-
     def mk_contract (self, preds):
-        """ construct coco contract"""
+        """ Construct CoCoSpec"""
         lusFile = self.args.file
         self.log.info("Building CoCoSpec ...")
         #s = z3.Solver(ctx=fp.ctx) # to build an SMT formula
@@ -144,12 +134,13 @@ class Zustre(object):
         """ Get unprocessed invariants """
         self.log.info('Getting raw invariants ... ')
         for p in preds:
-            invs = fp_get_cover_delta(self.fp, p)
+            invs = utils.fp_get_cover_delta(self.fp, p)
             print "Predicate: " + str(p)
             print "Invariants: \n\t" + str(invs)
             print "----------------------------"
 
     def mk_cex(self, preds):
+        """ Build CEX """
         self.log.info("Building CEX ... ")
         cex = Cex(self.args, self.ctx, self.fp, preds, self.coco)
         return cex.get_cex_xml()
@@ -163,7 +154,7 @@ class Zustre(object):
         self.fp.set('pdr.flexible_trace',True)
         self.fp.set('reset_obligation_queue',False)
         self.fp.set('spacer.elim_aux',False)
-        if self.args.eldarica: self.fp.set(':print_fixedpoint_extensions',False)
+        if self.args.eldarica: self.fp.set('print_fixedpoint_extensions', False)
         if self.args.utvpi: self.fp.set('pdr.utvpi', False)
         if self.args.tosmt:
             self.log.info("Setting low level printing")
@@ -228,7 +219,6 @@ class Zustre(object):
             self.log.info('Successful Horn VC generation ... ' + str(hornFormulas))
             q = self.fp.parse_file (hornFormulas)
             utils.stats.stop('Parse')
-            # print pure smtlib format
             lusFile = self.args.file
             lusFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
             base = (os.path.splitext(os.path.basename(lusFile)))[0]
@@ -252,9 +242,6 @@ class Zustre(object):
                 utils.stats.xml_print(self.args.node, cex, None)
             else:
                 utils.stats.brunch_print()
-
-
-
 
 
     def sFunction(self):

@@ -14,6 +14,8 @@ set (SRC
   CoCoSpec.py
   lustreParser.py
   z3_utils.py
+  utils.py
+  sfunction.py
   )
 
 

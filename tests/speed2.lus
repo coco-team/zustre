@@ -11,11 +11,17 @@ tel
 node speed(beacon,second:bool) returns (late,early:bool);
 var
   diff,incr:int;
+  a: int;
+  c: bool;
+  d: bool;
 let
   incr = if (beacon and not second) then 1
          else if (second and not beacon) then 2
          else 0;
-  diff = COUNTER(0,incr,(beacon or second),false);
+  a = 0;
+  c = beacon or second;
+  d = false;
+  diff = COUNTER(a,incr,c,d);
   early = false -> if pre early then (diff > 0)
                    else (diff >= 10);
   late = false -> if pre late then (diff < 0)

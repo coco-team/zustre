@@ -103,7 +103,10 @@ if __name__ == '__main__':
         p.join(args.timeout)
         if p.is_alive():
             stat('Result','TIMEOUT')
-            stats.brunch_print()
+            if args.xml:
+                stats.xml_print(args.node, None, None, True)
+            else:
+                stats.brunch_print()
             p.terminate()
             p.join()
         #main (args)

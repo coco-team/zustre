@@ -6,7 +6,7 @@ var a,b:bool;
 let
   a = false -> not pre(b);
   b = false -> pre(a);
-  out = a or b;
+  out = a and b;
 tel
 
 node intloopcounter (x:bool) returns (out:bool);
@@ -16,6 +16,7 @@ let
             else pre time + 1;
   out = (time = 2);
 tel
+
 
 
 node top (x:bool) returns (OK:bool);

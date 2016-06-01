@@ -1,15 +1,10 @@
 
--- 
--- Source: Koen Classen
--- 
--- given
 
 node Sofar( X : bool ) returns ( Y : bool );
 let
   Y = (true -> pre Y) and X;
 tel
 
--- assignment other
 
 node Store( Delta : int ) returns ( Total : int );
 var Prev : int;
@@ -21,18 +16,12 @@ let
      else Prev;
 tel
 
-
-
 node top( Delta : int ) returns ( OK : bool );
 var Total : int;
     S: bool;
-    -- Delta_const :  int;
 let
-  -- Delta_const = Delta -> pre Delta_const;
-  Total = Store( Delta );
-  
+  Total = Store( Delta ); 
   S =  Sofar( -1 <= Delta and Delta <= 1 );
   OK = S => 0 <= Total and Total <= 20; 
-  --!PROPERTY :  OK=true;
-  --!MAIN:true;
+  --%PROPERTY OK;
 tel
