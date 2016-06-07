@@ -30,6 +30,26 @@ let
 tel
 """)
 
+mode_spec = ("""
+ mode %s
+     (
+       require %s;
+       ensure %s;
+     );
+""")
+
+mode_cocospec = ("""contract %s (%s) returns (%s);
+%s
+let
+   assume %s
+
+   guarantee %s
+
+   %s
+tel
+""")
+
+
 class CoCoSpec(object):
 
     def __init__(self, args):
@@ -61,11 +81,11 @@ class CoCoSpec(object):
         self.tac = CoCoTac(self.verbose, ctx)
 
     def addContract(self, pred, inv):
+        """ Add invariants (inv) for each predicate (pred)
+           and perform first simplification """
         if self.verbose: self.log("addContract raw invariants", inv)
         tac = z3.Tactic('simplify', self.ctx)
-        #s = tac.apply(inv)
         simplified =  z3.simplify(inv)
-
         if str(pred) not in ["ERR", "INIT_STATE", "MAIN"]:
             simplified = self.coco_simplify(z3.substitute (simplified, *self.z3MapVar))
             if self.verbose: self.log("After simplification", simplified)
@@ -78,6 +98,7 @@ class CoCoSpec(object):
 
 
     def ppContract(self):
+        """ Pretty printer of contracts """
         self.pp.pprint(self.contract_dict)
 
 
@@ -103,8 +124,9 @@ class CoCoSpec(object):
         """ get input vars """
         return [x[0] for x in content]
 
-    def mkAssumeGurantee(self, coco_dict):
-        self._log.info("make assume gurantee ... ")
+    def reformulateAG (self, coco_dict):
+        """ Reformulate assume/gurantee formulae to be mode-aware"""
+        self._log.info("Re-formulate Assume/Guarantee... ")
         ag_dict = {}
         for node, content in coco_dict.iteritems():
             inputVars = self.getInput(self.varMappingAll[node]['input'])
@@ -120,12 +142,39 @@ class CoCoSpec(object):
         return ag_dict
 
     def toStringZ3Formula(self, formula):
-        init = printCoCo(formula[0])
-        step = printCoCo(formula[1])
-        final = "\n\t" + init + "\n\t -> " + step
-        return final
+        """ Transalte into human readable format"""
+        init_formula = formula[0]
+        step_formula = formula[1]
+        init = printCoCo(init_formula)
+        step = printCoCo(step_formula)
+        if self.tac.is_implies(step_formula):
+            #Check if it contains an implication
+            if self.verbose: self.log("Implication", step_formula)
+            mode_require = printCoCo(step_formula.arg(0))
+            mode_ensure = printCoCo(step_formula.arg(1))
+            #if self.verbose: self.log("Mode require", mode_require)
+            #if self.verbose: self.log("Mode ensure", mode_ensure)
+            require_init = "true" #TODO Check if this is coorect
+            require = " " + require_init + " -> (" + mode_require + ")"
+            ensure = " " + init + " -> (" + mode_ensure + ")"
+        else:
+            require = " true -> true"
+            ensure = " " + init + " -> (" + step + ")"
+        return require, ensure
+
+    def mkCoCoMode(self, cnt, node, form, ag_dict):
+        """ Build a mode contract"""
+        #TODO global assumption are still work in progress
+        #global_assume = self.toStringZ3Formula((ag_dict[node])['req'])
+        assume = "true -- more work needed;"
+        guarantee = "true -- more work needed;"
+        require, ensure = self.toStringZ3Formula((ag_dict[node])['ens'])
+        mode_name = "Mode_"+node+"_"+str(cnt)
+        coco_mode = mode_spec % (mode_name, require, ensure)
+        return assume, guarantee, coco_mode
 
     def mkCoCoSpec(self, lusFile):
+        """ Build the whole CoCoSpec """
         coco_dict = {}
         is_contract_profile = False
         tracefile = (lusFile.split(".")[0]) + ".traces.xml"
@@ -146,17 +195,20 @@ class CoCoSpec(object):
                     coco_dict.update({node_name:{"step":form}})
             else:
                 self._log.warning("Node " + str(pred) + " has no contract")
+
         all_contract = "-- CoCoSpec --\n"
-        ag_dict = self.mkAssumeGurantee(coco_dict)
+        ag_dict = self.reformulateAG(coco_dict)
         for node, form in coco_dict.iteritems():
+            cnt = 0 #counter for different mode
+            assume, guarantee, coco_mode = self.mkCoCoMode(cnt, node, form, ag_dict)
             profile = self.contractProfile(node) if is_contract_profile else "() returns ();"
             outputList = (self.varMappingAll[node])["output"]
             inp = self.mkProfileInOut((self.varMappingAll[node])["input"])
             out = self.mkProfileInOut(outputList)
             local = self.mkProfileLocal((self.varMappingAll[node])["local_init"], outputList)
-            require = self.toStringZ3Formula((ag_dict[node])['req'])
-            ensure = self.toStringZ3Formula((ag_dict[node])['ens'])
-            contract =  coco_spec % (node, inp, out, local, require, ensure)
+            #require = self.toStringZ3Formula((ag_dict[node])['req'])
+            #ensure = self.toStringZ3Formula((ag_dict[node])['ens'])
+            contract =  mode_cocospec % (node, inp, out, local, assume, guarantee, coco_mode)
             all_contract += contract + "\n"
             if self.verbose: print "==== CoCo ===  \n" + contract + "\n===== CoCo ====="
         if self.kind2:
@@ -264,6 +316,9 @@ class CoCoTac(object):
         print "====== (Start) " + method + " ======="
         self.pp.pprint(msg)
         print "====== (End) " + method + " ======="
+
+    def is_implies (self, expr):
+        return z3.is_app_of (expr, z3.Z3_OP_IMPLIES)
 
     def is_iff (self, expr):
         return z3.is_app_of (expr, z3.Z3_OP_IFF)

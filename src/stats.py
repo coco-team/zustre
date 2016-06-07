@@ -147,7 +147,7 @@ def xml_print(prop, cex, contract, timeout=False):
       <Lustre2Horn unit="sec">%s</Lustre2Horn>
       <Parse unit="sec">%s</Parse>
       <Query unit="sec">%s</Query>
-      <Answer>UNKNOWN</Answer>
+      <Answer>TIMEOUT</Answer>
      </Property>
    </Results>
 """)
