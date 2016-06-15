@@ -43,5 +43,5 @@ let
 --  --!PROPERTY :  true -> not late and pre early;
 
   -- if was early, will not next be late; correct
-  --!PROPERTY :  OK; 
+  --%PROPERTY OK; 
 tel

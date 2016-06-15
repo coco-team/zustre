@@ -129,15 +129,19 @@ class CoCoSpec(object):
         self._log.info("Re-formulate Assume/Guarantee... ")
         ag_dict = {}
         for node, content in coco_dict.iteritems():
+            print node, content
             inputVars = self.getInput(self.varMappingAll[node]['input'])
             stepForm = list()
             try:
                 initForm = content['init']
                 stepForm = content['step']
+                print stepForm
             except:
                 initForm = list()
             node_dict = {'input': inputVars, 'init': initForm, 'step': stepForm}
+            print node_dict
             require, ensure = self.tac.applyTac(node_dict)
+
             ag_dict.update({node:{"req": require, "ens":ensure}})
         return ag_dict
 
@@ -194,7 +198,13 @@ class CoCoSpec(object):
                 except:
                     coco_dict.update({node_name:{"step":form}})
             else:
-                self._log.warning("Node " + str(pred) + " has no contract")
+                self._log.warning("Node " + str(pred) + " is stateless)")
+                node_name = str(pred)
+                try:
+                    inv = coco_dict[node_name]
+                    inv.update({"step":form})
+                except:
+                    coco_dict.update({node_name:{"step":form}})
 
         all_contract = "-- CoCoSpec --\n"
         ag_dict = self.reformulateAG(coco_dict)
