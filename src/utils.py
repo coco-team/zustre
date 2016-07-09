@@ -1,4 +1,3 @@
-
 import z3
 import z3core
 from z3_utils import *
@@ -47,6 +46,7 @@ def fp_get_preds (fp):
         if is_implies (pred): pred = pred.arg (1)
 
         decl = pred.decl ()
+
         assert is_uninterpreted (decl)
         if z3key (decl) in seen: continue
         seen.add (z3key (decl))

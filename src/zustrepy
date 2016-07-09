@@ -18,10 +18,11 @@ def parseArgs (argv):
                     action='store_true', default=False)
     p.add_argument ('--trace', help='Trace levels to enable',
                    default='')
-    p.add_argument ('--stat', help='Print statistics', dest="stat",
+    p.add_argument ('--stat', help='Print Spacer statistics', dest="stat",
                     default=False, action='store_true')
     p.add_argument ('--verbose', help='Verbose', action='store_true',
                     default=False, dest="verbose")
+    p.add_argument ('--spacer_verbose', help='Spacer Verbose', action='store_true', default= False, dest='spacer_verbose')
     p.add_argument ('--no-simp', help='Z3 simplification', action='store_false',
                     default=True, dest="simp")
     p.add_argument ('--invs', help='Additional invariants', default=None)
@@ -52,12 +53,6 @@ def parseArgs (argv):
     p.add_argument ('--s-func', help='S-Function', default=None, dest="sfunction")
     p.add_argument ('--eldarica', help='Use Eldarica', default =False, action='store_true', dest="eldarica")
     pars = p.parse_args (argv)
-    global verbose
-    verbose = pars.verbose
-    global xml
-    xml = pars.xml
-    global timeout
-    timeout = pars.timeout
     return pars
 
 

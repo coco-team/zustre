@@ -21,7 +21,7 @@ class Cex(object):
 
 
     def get_cex_xml(self):
-        self._log.info("Parsing cex")
+        self._log.info("Parsing CEX ...")
         raw_cex = self.fp.get_ground_sat_answer()
         ground_sat = (get_conjuncts(raw_cex)).__reversed__()
         pred_dict = {}

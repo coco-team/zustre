@@ -3,7 +3,6 @@
 import z3
 import z3core
 import stats
-
 from z3_utils import *
 from LogManager import LoggingManager
 import os,subprocess,sys
@@ -16,8 +15,6 @@ import utils
 
 
 root = os.path.dirname (os.path.dirname (os.path.realpath (__file__)))
-verbose=False
-xml=False
 
 class Zustre(object):
     def __init__(self, args, ctx, fp):
@@ -30,7 +27,6 @@ class Zustre(object):
         self.trace_file = None
         if self.args.xml: LoggingManager.disable_logger()
         return
-
 
     def isexec (self, fpath):
         """ check if program is executable"""
@@ -88,9 +84,8 @@ class Zustre(object):
             top_node = 'top' if not self.args.node else self.args.node #TODO : check directly which node is top
             lusFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
             lustrec = self.getLustreC();
-            self.log.info("LustreC path ... " + str(lustrec))
-            opt_traces = ["-horn-traces"] if self.args.cg else []
-            cmd = [lustrec, "-horn", "-node", top_node, "-horn-query"] + opt_traces + ["-d", lusFile_dir, lusFile]
+            #opt_traces = ["-horn-traces"] if self.args.cg else []
+            cmd = [lustrec, "-horn", "-node", top_node, "-horn-query"] + ["-horn-traces"] + ["-d", lusFile_dir, lusFile]
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             hornDefs, _ = p.communicate()
             if "done" in hornDefs:
@@ -100,7 +95,6 @@ class Zustre(object):
                 self.smt2_file = smt2_file
                 self.trace_file = tracefile
                 self.coco.set_ctx(self.ctx)
-                if self.args.cg: self.coco.parseTraceFile(tracefile)
                 return smt2_file
             else:
                 self.log.error(hornDefs)
@@ -108,8 +102,9 @@ class Zustre(object):
 
     def mk_contract (self, preds):
         """ Construct CoCoSpec"""
-        lusFile = self.args.file
         self.log.info("Building CoCoSpec ...")
+        lusFile = self.args.file
+        self.coco.parseTraceFile(self.tracefile)
         #s = z3.Solver(ctx=fp.ctx) # to build an SMT formula
         for p in preds:
             # create an app by creating dummy variables using p.arity () and p.domain()
@@ -139,17 +134,22 @@ class Zustre(object):
             print "Invariants: \n\t" + str(invs)
             print "----------------------------"
 
+            
     def mk_cex(self, preds):
         """ Build CEX """
         self.log.info("Building CEX ... ")
+        self.coco.parseTraceFile(self.trace_file)
         cex = Cex(self.args, self.ctx, self.fp, preds, self.coco)
         return cex.get_cex_xml()
 
+    
     def setSolver(self):
         """Set the configuration for the solver"""
         self.fp.set (engine='spacer')
         if self.args.stat:
-            self.fp.set('print.utils.statistics',True)
+            self.fp.set('print_statistics',True)
+        if self.args.spacer_verbose:
+             z3.set_option (verbose=1)
         self.fp.set('use_heavy_mev',True)
         self.fp.set('pdr.flexible_trace',True)
         self.fp.set('reset_obligation_queue',False)
@@ -175,7 +175,7 @@ class Zustre(object):
             self.log.error('Problem generating Horn formulae')
             return
         with utils.stats.timer ('Parse'):
-            self.log.info('Successful Horn VCC generation ... ' + str(hornFormulas))
+            self.log.info('Successful Horn Generation ... ' + str(hornFormulas))
             q = self.fp.parse_file (hornFormulas)
         preds = utils.fp_get_preds(self.fp) # get the predicates before z3 starts playing with them
         if self.args.invs :
@@ -183,7 +183,7 @@ class Zustre(object):
             if z3.is_and (lemmas):
                 lemmas = lemmas.children ()
             for l in lemmas:
-                if verbose: print l
+                if self.args.verbose: print l
                 fp_add_cover (self.fp, l.arg(0), l.arg(1))
         contract_file = None
         with utils.stats.timer ('Query'):

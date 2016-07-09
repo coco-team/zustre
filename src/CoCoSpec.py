@@ -44,7 +44,6 @@ let
    assume %s
 
    guarantee %s
-
    %s
 tel
 """)
@@ -67,7 +66,6 @@ class CoCoSpec(object):
         self.kind2 = args.kind2
         self.pp = pprint.PrettyPrinter(indent=4)
         self.tac = None
-        self.verbose = args.verbose
         self.z3Types = {"Int":z3.Int, "Real": z3.Real,"Bool":z3.Bool}
 
 
@@ -107,7 +105,7 @@ class CoCoSpec(object):
             if self.verbose: self.log("Before Tac", form)
             form_str = ""
             try:
-                print self.varMappingAll[node]
+                #print self.varMappingAll[node]
                 form_str = printCoCo(self.tac.applyTac(form))
                 if self.verbose: self.log("After Tac", form_str)
                 return "\n\t" + form_str
@@ -126,22 +124,18 @@ class CoCoSpec(object):
 
     def reformulateAG (self, coco_dict):
         """ Reformulate assume/gurantee formulae to be mode-aware"""
-        self._log.info("Re-formulate Assume/Guarantee... ")
+        self._log.debug("Re-formulate Assume/Guarantee... ")
         ag_dict = {}
         for node, content in coco_dict.iteritems():
-            print node, content
             inputVars = self.getInput(self.varMappingAll[node]['input'])
             stepForm = list()
             try:
                 initForm = content['init']
                 stepForm = content['step']
-                print stepForm
             except:
                 initForm = list()
             node_dict = {'input': inputVars, 'init': initForm, 'step': stepForm}
-            print node_dict
             require, ensure = self.tac.applyTac(node_dict)
-
             ag_dict.update({node:{"req": require, "ens":ensure}})
         return ag_dict
 
@@ -170,8 +164,8 @@ class CoCoSpec(object):
         """ Build a mode contract"""
         #TODO global assumption are still work in progress
         #global_assume = self.toStringZ3Formula((ag_dict[node])['req'])
-        assume = "true -- more work needed;"
-        guarantee = "true -- more work needed;"
+        assume = "true -- work in progress;"
+        guarantee = "true -- work in progress;"
         require, ensure = self.toStringZ3Formula((ag_dict[node])['ens'])
         mode_name = "Mode_"+node+"_"+str(cnt)
         coco_mode = mode_spec % (mode_name, require, ensure)
@@ -349,36 +343,36 @@ class CoCoTac(object):
         else:
             return expr
 
-
     def mk_and(self, expr_list):
         conjunct = [printCoCo(x) for x in expr_list]
         no_new_line = [x.rstrip() for x in conjunct]
         stripped = [textwrap.fill(x, 40) for x in no_new_line]
         return " and ".join(map(str,stripped))
 
-
     def tac2(self, expr):
-        "tactic to transform [a v b] into [not(a) => b]"
-
-        if self.verbose: self.log("TAC-2 Before", str(expr))
+        """
+        tactic to transform [a v b] into [not(a) => b]
+        """
         lhs_list = self.nnf(z3.Not(expr.arg(0)))[0]
         rhs_list = expr.children()[1:]
         rhs = rhs_list[0] if len(rhs_list)==1 else z3.Or(rhs_list,self.ctx)
         lhs = lhs_list[0] if len(lhs_list)==1 else z3.And(lhs_list,self.ctx)
         simp = z3.Implies(lhs,rhs)
-        if self.verbose: self.log("TAC-2 After", str(simp))
+        verb = "[" + str(expr) + "] ===> [" + str(simp) + "]"
+        if self.verbose: self.log("TAC-2 Transformation", verb)
         return simp
 
-
     def tac1(self, expr):
-        "tactic to transform [not a = b] into [a = nnf(not b)]"
-        if self.verbose: self.log("TAC-1 Before", str(expr))
+        """
+        tactic to transform [not a = b] into [a = nnf(not b)]
+        """
         not_lhs = (expr.arg(0)).arg(0)
         rhs_list = self.nnf(z3.Not(expr.arg(1), self.ctx))[0]
         rhs_ctx = [z3.And(x, self.ctx) for x in rhs_list] # HUGE HACK
         rhs = z3.simplify(z3.And(rhs_ctx,self.ctx))
         simp = (not_lhs == rhs)
-        if self.verbose: self.log("TAC-1 After", str(simp))
+        verb = "[" + str(expr) + "] ===> [" + str(simp) + "]"
+        if self.verbose: self.log("TAC-1 Transformation", verb)
         return simp
 
 
