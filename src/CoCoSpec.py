@@ -175,7 +175,7 @@ class CoCoSpec(object):
         """ Build the whole CoCoSpec """
         coco_dict = {}
         is_contract_profile = False
-        tracefile = (lusFile.split(".")[0]) + ".traces.xml"
+        #tracefile = (lusFile.split(".")[0]) + ".traces.xml"
         for pred,form in self.contract_dict.iteritems():
             if "_init" in str(pred):
                 node_name = str(pred).split("_init")[0]

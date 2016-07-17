@@ -104,7 +104,7 @@ class Zustre(object):
         """ Construct CoCoSpec"""
         self.log.info("Building CoCoSpec ...")
         lusFile = self.args.file
-        self.coco.parseTraceFile(self.tracefile)
+        self.coco.parseTraceFile(self.trace_file)
         #s = z3.Solver(ctx=fp.ctx) # to build an SMT formula
         for p in preds:
             # create an app by creating dummy variables using p.arity () and p.domain()

@@ -21,7 +21,7 @@ class Cex(object):
 
 
     def get_cex_xml(self):
-        self._log.info("Parsing CEX ...")
+        self._log.info("Parsing CEX ... ")
         raw_cex = self.fp.get_ground_sat_answer()
         ground_sat = (get_conjuncts(raw_cex)).__reversed__()
         pred_dict = {}
@@ -32,15 +32,18 @@ class Cex(object):
             pred_dict.update({str(lus_pred.decl()):lus_arg})
         k = 0 # k-iteration
         for conj in ground_sat:
+            print conj
             ground_val = [str(x) for x in conj.children()]
             ground_pair = []
             try:
                 node_name = str(conj.decl())
                 ground_vars = pred_dict[node_name]
                 ground_pair = zip(ground_vars,ground_val)
-                if "_init" in node_name:
-                    node = node_name.split("_init")[0]
-                    cex_dict.update({node:{k:ground_pair}})
+                if "_reset" in node_name:
+                    # this condition is to remove the node nodename_reset added by lustrec
+                    continue
+                    # node = node_name.split("_reset")[0]
+                    # cex_dict.update({node:{k:ground_pair}})
                 elif "_step" in node_name:
                     node = node_name.split("_step")[0]
                     try:
@@ -109,19 +112,24 @@ class Cex(object):
         """ build the xml version of the cex"""
         xml_signal_value = ""
         for node, cex in cex_dict.iteritems():
-            node_xml = ""
+            node_xml = (" <Node name =%s>\n") % node
+            signal_xml = ""
             for signal, it_value in cex.iteritems():
-                if "pre(" not in signal:
+                # this condition is added to have signal names compatiable with the lustrec automata version
+                if "_arrow._first_" in signal:
+                    continue
+                elif "pre(" not in signal:
                     typ = self.get_type(node, signal)
-                    sig_name = ("         <Signal name=\"%s\" node=\"%s\" type=\"%s\">") % (signal, node, typ.lower())
+                    sig_name = ("            <Stream name=\"%s\" type=\"%s\">") % (signal, typ.lower())
                     sig_values = ""
                     for it, value in it_value.iteritems():
                         sanitized_value = self.check_value(value)
                         if sanitized_value:
-                            sig_values = sig_values + ("            <Value time=\"%s\">%s</Value>\n") % (str(it), str(sanitized_value))
+                            sig_values = sig_values + ("                <Value instant=\"%s\">%s</Value>\n") % (str(it), str(sanitized_value))
                     if sig_values != "":
-                        node_xml = sig_name + "\n" + sig_values + "         </Signal>\n"
-                        xml_signal_value = xml_signal_value + node_xml
+                        signal_xml = sig_name + "\n" + sig_values + "           </Stream>\n"
+            node_xml = node_xml + signal_xml
+            xml_signal_value =  xml_signal_value + node_xml + "         </Node>\n"
         return xml_signal_value
 
 
