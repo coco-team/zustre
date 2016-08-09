@@ -13,7 +13,7 @@ before_install:
 install:
   - export LZ="$TRAVIS_BUILD_DIR/../zus"
   - mkdir -p $LZ
-  - wget --output-document=zustre.tar.gz  https://www.dropbox.com/s/wqvh31085s49ia4/zustre.tar.gz?dl=1;
+  - wget --output-document=zustre.tar.gz https://www.dropbox.com/s/cw29pcuglj867pp/zustre.tar.gz?dl=1;
   - tar xvf zustre.tar.gz --strip-components=1 -C $LZ;
   - ls $LZ
 
