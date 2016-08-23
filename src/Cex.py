@@ -111,11 +111,9 @@ class Cex(object):
         """ build the xml version of the cex"""
         xml_signal_value = ""
         for node, cex in cex_dict.iteritems():
-            print node
             node_xml = (" <Node name =%s>\n") % node
             signal_xml = ""
             for signal, it_value in cex.iteritems():
-                print signal
                 # this condition is added to have signal names compatiable with the lustrec automata version
                 if "_arrow._first_" in signal:
                     continue
@@ -127,7 +125,7 @@ class Cex(object):
                         sanitized_value = self.check_value(value)
                         if sanitized_value:
                             sig_values = sig_values + ("                <Value instant=\"%s\">%s</Value>\n") % (str(it), str(sanitized_value))
-                    print sig_values
+                    
                     if sig_values != "":
                         signal_xml = sig_name + "\n" + sig_values + "           </Stream>\n"
             node_xml = node_xml + signal_xml
