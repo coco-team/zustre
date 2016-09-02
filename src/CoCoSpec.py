@@ -121,12 +121,13 @@ class CoCoSpec(object):
     def getInput(self, content):
         """ get input vars """
         return [x[0] for x in content]
-
+        
     def reformulateAG (self, coco_dict):
         """ Reformulate assume/gurantee formulae to be mode-aware"""
         self._log.debug("Re-formulate Assume/Guarantee... ")
         ag_dict = {}
         for node, content in coco_dict.iteritems():
+            inputVars = list()
             inputVars = self.getInput(self.varMappingAll[node]['input'])
             stepForm = list()
             try:
@@ -177,8 +178,8 @@ class CoCoSpec(object):
         is_contract_profile = False
         #tracefile = (lusFile.split(".")[0]) + ".traces.xml"
         for pred,form in self.contract_dict.iteritems():
-            if "_init" in str(pred):
-                node_name = str(pred).split("_init")[0]
+            if "_reset" in str(pred):
+                node_name = str(pred).split("_reset")[0]
                 try:
                     inv = coco_dict[node_name]
                     inv.update({"init":form})

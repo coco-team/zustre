@@ -52,6 +52,7 @@ def parseArgs (argv):
                     type=float, default=20.0, dest="timeout")
     p.add_argument ('--s-func', help='S-Function', default=None, dest="sfunction")
     p.add_argument ('--eldarica', help='Use Eldarica', default =False, action='store_true', dest="eldarica")
+    p.add_argument ('--stateflow', help='Cex for Stateflow', default =False, action='store_true', dest="stateflow")
     pars = p.parse_args (argv)
     return pars
 

@@ -10,6 +10,7 @@ import shutil
 from CoCoSpec import CoCoSpec
 from kind2 import Kind2
 from Cex import Cex
+from CexSF import CexSF
 from sfunction import SFunction
 import utils
 
@@ -86,6 +87,7 @@ class Zustre(object):
             lustrec = self.getLustreC();
             #opt_traces = ["-horn-traces"] if self.args.cg else []
             cmd = [lustrec, "-horn", "-node", top_node, "-horn-query"] + ["-horn-traces"] + ["-d", lusFile_dir, lusFile]
+            if self.args.verbose: print " ".join(x for x in cmd)
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             hornDefs, _ = p.communicate()
             if "done" in hornDefs:
@@ -139,7 +141,10 @@ class Zustre(object):
         """ Build CEX """
         self.log.info("Building CEX ... ")
         self.coco.parseTraceFile(self.trace_file)
-        cex = Cex(self.args, self.ctx, self.fp, preds, self.coco)
+        if self.args.stateflow:
+            cex = CexSF(self.args, self.ctx, self.fp, preds, self.coco)
+        else:
+            cex = Cex(self.args, self.ctx, self.fp, preds, self.coco)
         return cex.get_cex_xml()
 
     
@@ -195,7 +200,10 @@ class Zustre(object):
                 utils.stat ('Result', 'SAFE')
                 if self.args.ri: self.get_raw_invs(preds)
                 if self.args.cg:
-                    contract_file = self.mk_contract (preds)
+                    try:
+                        contract_file = self.mk_contract (preds)
+                    except:
+                        self._log.warning('Failed to generate CoCoSpec')
         if not self.args.save:
             self.log.debug("Cleaning up temp files ...")
             try:
