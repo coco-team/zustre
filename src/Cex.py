@@ -111,7 +111,7 @@ class Cex(object):
         """ build the xml version of the cex"""
         xml_signal_value = ""
         for node, cex in cex_dict.iteritems():
-            node_xml = (" <Node name =%s>\n") % node
+            node_xml = (" <Node name =\"%s\">\n") % node
             signal_xml = ""
             for signal, it_value in cex.iteritems():
                 # this condition is added to have signal names compatiable with the lustrec automata version
@@ -128,7 +128,7 @@ class Cex(object):
                     
                     if sig_values != "":
                         signal_xml = sig_name + "\n" + sig_values + "           </Stream>\n"
-            node_xml = node_xml + signal_xml
+                node_xml = node_xml + signal_xml
             xml_signal_value =  xml_signal_value + node_xml + "         </Node>\n"
         return xml_signal_value
 
