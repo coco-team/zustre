@@ -2,7 +2,7 @@
 
 # Zustre #
 
-Zustre is a modular SMT-based PDR-style verification engine for Lustre programs. It is also an engine to generate assume-guarantee style contract.
+Zustre is a modular SMT-based PDR-style verification engine for Lustre programs. It is also an engine to generate mode-aware assume-guarantee style formal contract.
 
 ##License##
 Zustre is distributed under a modified BSD license. See [LICENSE](LICENSE) for details.
@@ -26,9 +26,9 @@ Zustre is distributed under a modified BSD license. See [LICENSE](LICENSE) for d
 * `cmake --build .` to build zustre
 * `cmake --build . --target install` to install everything in `run` directory
 * `cmake --build . --target package` to package everything.
-* (Optional) To use Eldarica just copy the eldarica binary under `build\run\bin`
+* (Optional) To use Eldarica just copy the eldarica binary under `build/run/bin`
 
-Zustre and dependencies are installed in `build/run`
+Zustre and dependencies are installed under `build/run`
 
 
 ## Usage ##
