@@ -60,13 +60,13 @@ def parseArgs (argv):
 def stat (key, val): stats.put (key, val)
 
 
-def main (args):
+def main (args, lustrec_path):
     from zustre import Zustre
     import z3
     stat ('Result', 'UNKNOWN')
     ctx = z3.Context ()
     fp = z3.Fixedpoint (ctx=ctx)
-    zus = Zustre(args,ctx,fp)
+    zus = Zustre(args,ctx,fp, lustrec_path)
     if args.no_solving:
         zus.encode()
     elif args.sfunction:
@@ -81,6 +81,8 @@ if __name__ == '__main__':
      # unbuffered output
     sys.stdout = os.fdopen (sys.stdout.fileno (), 'w', 0)
     path = os.path.abspath (sys.argv[0])
+    lustrec_path = os.path.abspath (os.path.join(path, '..', '..', 'include', 'lustrec'))
+    print lustrec_path
     path = os.path.dirname(path)
 
     ## update system PATH to location of the package
@@ -88,13 +90,14 @@ if __name__ == '__main__':
         os.environ['PATH'] = path + os.pathsep + os.environ['PATH']
 
     path = os.path.abspath (os.path.join(path, '..', 'lib', 'zustrepy', 'src'))
+
     if os.path.isdir (path): sys.path.insert(0, path)
     z3_path = os.path.abspath (os.path.join(path, '..', '..', '..', 'lib', 'z3py'))
     if os.path.isdir (z3_path):   sys.path.insert(0, z3_path)
     import stats
     args = parseArgs(sys.argv[1:])
     try:
-        p = multiprocessing.Process(target=main, args=(args,))
+        p = multiprocessing.Process(target=main, args=(args, lustrec_path, ))
         p.start()
         p.join(args.timeout)
         if p.is_alive():

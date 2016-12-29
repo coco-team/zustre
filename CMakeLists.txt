@@ -87,8 +87,11 @@ else()
   # set_target_properties(lustrec PROPERTIES EXCLUDE_FROM_ALL ON)
   message ("Found LUSTREC at ${LUSTREC_EXECUTABLE}")
   # indicate that we want lustrec binary to be included in the binary distribution
+  include_directories(${LUSTREC_INCLUDE_DIR})
   install (PROGRAMS ${LUSTREC_EXECUTABLE} DESTINATION bin)
+  install (DIRECTORY ${LUSTREC_INCLUDE_DIR} DESTINATION include)
 endif()
+
 
 
 set (PACKAGE_NAME Zustre)

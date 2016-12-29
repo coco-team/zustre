@@ -18,9 +18,10 @@ import utils
 root = os.path.dirname (os.path.dirname (os.path.realpath (__file__)))
 
 class Zustre(object):
-    def __init__(self, args, ctx, fp):
+    def __init__(self, args, ctx, fp, lustrec_include):
         self.log = LoggingManager.get_logger(__name__)
         self.args = args
+        self.lustrec_include = lustrec_include
         self.fp = fp
         self.ctx = ctx
         self.coco = CoCoSpec(self.args)
@@ -86,7 +87,7 @@ class Zustre(object):
             lusFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
             lustrec = self.getLustreC();
             #opt_traces = ["-horn-traces"] if self.args.cg else []
-            cmd = [lustrec, "-horn", "-node", top_node, "-horn-query"] + ["-horn-traces"] + ["-d", lusFile_dir, lusFile]
+            cmd = [lustrec, "-I", self.lustrec_include, "-horn", "-node", top_node, "-horn-query"] + ["-horn-traces"] + ["-d", lusFile_dir, lusFile]
             if self.args.verbose: print " ".join(x for x in cmd)
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             hornDefs, _ = p.communicate()
@@ -136,7 +137,7 @@ class Zustre(object):
             print "Invariants: \n\t" + str(invs)
             print "----------------------------"
 
-            
+
     def mk_cex(self, preds):
         """ Build CEX """
         self.log.info("Building CEX ... ")
@@ -147,7 +148,7 @@ class Zustre(object):
             cex = Cex(self.args, self.ctx, self.fp, preds, self.coco)
         return cex.get_cex_xml()
 
-    
+
     def setSolver(self):
         """Set the configuration for the solver"""
         self.fp.set (engine='spacer')
@@ -203,7 +204,7 @@ class Zustre(object):
                     try:
                         contract_file = self.mk_contract (preds)
                     except:
-                        self._log.warning('Failed to generate CoCoSpec')
+                        self.log.warning('Failed to generate CoCoSpec')
         if not self.args.save:
             self.log.debug("Cleaning up temp files ...")
             try:

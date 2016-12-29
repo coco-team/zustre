@@ -2,7 +2,7 @@ node prop (x:int) returns (out:bool)
   var i:bool;
   let
   i = true -> pre (i);
-  out = test1(x) or i;
+  out = test1(x) and i;
   --%PROPERTY out;
   tel
   
