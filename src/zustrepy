@@ -82,7 +82,6 @@ if __name__ == '__main__':
     sys.stdout = os.fdopen (sys.stdout.fileno (), 'w', 0)
     path = os.path.abspath (sys.argv[0])
     lustrec_path = os.path.abspath (os.path.join(path, '..', '..', 'include', 'lustrec'))
-    print lustrec_path
     path = os.path.dirname(path)
 
     ## update system PATH to location of the package

@@ -87,7 +87,8 @@ class Zustre(object):
             lusFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
             lustrec = self.getLustreC();
             #opt_traces = ["-horn-traces"] if self.args.cg else []
-            cmd = [lustrec, "-I", self.lustrec_include, "-horn", "-node", top_node, "-horn-query"] + ["-horn-traces"] + ["-d", lusFile_dir, lusFile]
+            lustrec_include = self.lustrec_include + os.sep
+            cmd = [lustrec, "-I", lustrec_include, "-horn", "-node", top_node, "-horn-query"] + ["-horn-traces"] + ["-d", lusFile_dir, lusFile]
             if self.args.verbose: print " ".join(x for x in cmd)
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             hornDefs, _ = p.communicate()
