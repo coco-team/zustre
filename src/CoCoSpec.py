@@ -81,7 +81,6 @@ class CoCoSpec(object):
     def addContract(self, pred, inv):
         """ Add invariants (inv) for each predicate (pred)
            and perform first simplification """
-        if self.verbose: self.log("addContract raw invariants", inv)
         tac = z3.Tactic('simplify', self.ctx)
         simplified =  z3.simplify(inv)
         if str(pred) not in ["ERR", "INIT_STATE", "MAIN"]:
@@ -97,7 +96,9 @@ class CoCoSpec(object):
 
     def ppContract(self):
         """ Pretty printer of contracts """
+        print "-- Start Raw Invariants --- "
         self.pp.pprint(self.contract_dict)
+        print "-- End Raw Invariants --- "
 
 
     def mkFormulae(self, form, node):
@@ -121,7 +122,7 @@ class CoCoSpec(object):
     def getInput(self, content):
         """ get input vars """
         return [x[0] for x in content]
-        
+
     def reformulateAG (self, coco_dict):
         """ Reformulate assume/gurantee formulae to be mode-aware"""
         self._log.debug("Re-formulate Assume/Guarantee... ")
@@ -176,7 +177,7 @@ class CoCoSpec(object):
         """ Build the whole CoCoSpec """
         coco_dict = {}
         is_contract_profile = False
-        #tracefile = (lusFile.split(".")[0]) + ".traces.xml"
+        if self.verbose: self.ppContract()
         for pred,form in self.contract_dict.iteritems():
             if "_reset" in str(pred):
                 node_name = str(pred).split("_reset")[0]
@@ -295,9 +296,10 @@ class CoCoSpec(object):
                         self.varMappingTypes.update(dict(zip(zip(horn,typ),lus)))
                 node_dict.update({node_name:{"input":inp,"output":output, "local_init":local_init, "local_step":local_step}})
             self.varMappingAll.update(node_dict)
-            pp = pprint.PrettyPrinter(indent=4)
-            #pp.pprint(self.varMappingAll)
-            #pp.pprint(self.varMapping)
+
+            #self.pp.pprint(self.varMappingAll)
+            if self.verbose:
+                self.pp.pprint(self.varMapping)
             #pp.pprint(self.varMappingTypes)
             #making pairs of vars for the subsitution
             self.mkZ3Vars()

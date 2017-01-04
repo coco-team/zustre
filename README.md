@@ -22,7 +22,7 @@ Zustre is distributed under a modified BSD license. See [LICENSE](LICENSE) for d
 
 *  Build separately [LustreC](https://github.com/coco-team/lustrec)
 * `cd zustre ; mkdir build ; cd build`
-* `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=run -DLUSTREC_EXECUTABLE=LUSTREC_BIN ../ ` where `LUSTREC_BIN` is the directory containing the lustrec binary.
+* `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=run -DLUSTREC_ROOT=LUSTREC_DIR ../ ` where `LUSTREC_DIR` is the directory containing [LustreC](https://github.com/coco-team/lustrec). Note that you need to compile LustreC separately beforehand.
 * `cmake --build .` to build zustre
 * `cmake --build . --target install` to install everything in `run` directory
 * `cmake --build . --target package` to package everything.
