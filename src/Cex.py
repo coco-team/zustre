@@ -7,6 +7,7 @@ from z3_utils import *
 from cocoprinter import *
 
 
+
 class Cex(object):
 
     def __init__(self, args, ctx, fp, preds, coco):
@@ -23,7 +24,6 @@ class Cex(object):
     def get_cex_xml(self):
         self._log.info("Parsing CEX ... ")
         raw_cex = self.fp.get_ground_sat_answer()
-        
         ground_sat = (get_conjuncts(raw_cex)).__reversed__()
         pred_dict = {}
         cex_dict = {} #store the cex in order
@@ -111,14 +111,13 @@ class Cex(object):
     def mk_cex_xml(self, cex_dict):
         """ build the xml version of the cex"""
         xml_signal_value = ""
+        if self.args.verbose: pprint.pprint(cex_dict)
         for node, cex in cex_dict.iteritems():
             node_xml = (" <Node name =\"%s\">\n") % node
             signal_xml = ""
             for signal, it_value in cex.iteritems():
                 # this condition is added to have signal names compatiable with the lustrec automata version
-                if "_arrow._first_" in signal:
-                    continue
-                elif "pre(" not in signal:
+                if "pre(" not in signal and "_arrow._first_" not in signal:
                     typ = self.get_type(node, signal)
                     sig_name = ("            <Stream name=\"%s\" type=\"%s\">") % (signal, typ.lower())
                     sig_values = ""
@@ -126,10 +125,11 @@ class Cex(object):
                         sanitized_value = self.check_value(value)
                         if sanitized_value:
                             sig_values = sig_values + ("                <Value instant=\"%s\">%s</Value>\n") % (str(it), str(sanitized_value))
-                    
+
                     if sig_values != "":
                         signal_xml = sig_name + "\n" + sig_values + "           </Stream>\n"
-                node_xml = node_xml + signal_xml
+                        node_xml = node_xml + signal_xml
+
             xml_signal_value =  xml_signal_value + node_xml + "         </Node>\n"
         return xml_signal_value
 
@@ -139,6 +139,7 @@ class Cex(object):
         if "top_" in value:
             return None
         elif value in ["False", "True"]:
-            return 0 if value is "False" else 1
+            new_value = "0" if value.strip() == "False" else "1"
+            return new_value
         else:
             return value

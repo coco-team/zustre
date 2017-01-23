@@ -46,7 +46,7 @@ class CexSF(object):
                         # node = node_name.split("_reset")[0]
                         # cex_dict.update({node:{k:ground_pair}})
                     elif "_step" in node_name:
-                        
+
                         node = node_name.split("_step")[0]
                         try:
                             # case in which we already have the node in dict
@@ -118,31 +118,29 @@ class CexSF(object):
             return 'real'
         else:
             return 'int'
-        
+
     def mk_cex_xml(self, cex_dict):
         """ build the xml version of the cex"""
         xml_signal_value = ""
+        if self.args.verbose: pprint.pprint(cex_dict)
         for node, cex in cex_dict.iteritems():
             node_xml = (" <Node name =\"%s\">\n") % node
             signal_xml = ""
             for signal, it_value in cex.iteritems():
                 # this condition is added to have signal names compatiable with the lustrec automata version
-                if "_arrow._first_" in signal:
-                    continue
-                elif "pre(" not in signal:
+                if "pre(" not in signal and "_arrow._first_" not in signal:
                     typ = self.get_type(node, signal)
-                    typ = self._guessTyp(it_value[0]) if typ == "UNK"  else typ
                     sig_name = ("            <Stream name=\"%s\" type=\"%s\">") % (signal, typ.lower())
                     sig_values = ""
                     for it, value in it_value.iteritems():
                         sanitized_value = self.check_value(value)
                         if sanitized_value:
                             sig_values = sig_values + ("                <Value instant=\"%s\">%s</Value>\n") % (str(it), str(sanitized_value))
-                            
-                    
+
                     if sig_values != "":
                         signal_xml = sig_name + "\n" + sig_values + "           </Stream>\n"
-                node_xml = node_xml + signal_xml
+                        node_xml = node_xml + signal_xml
+
             xml_signal_value =  xml_signal_value + node_xml + "         </Node>\n"
         return xml_signal_value
 
@@ -152,6 +150,7 @@ class CexSF(object):
         if "top_" in value:
             return None
         elif value in ["False", "True"]:
-            return 0 if value is "False" else 1
+            new_value = "0" if value.strip() == "False" else "1"
+            return new_value
         else:
             return value
