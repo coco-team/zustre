@@ -60,6 +60,7 @@ class CoCoSpec(object):
         self.varMappingAll = {}
         self.varMapping = {}
         self.varMappingTypes = {}
+        self.automataDirt = [] # store all the vars generated for the automata stuff
         self.z3MapVar = []
         self.do_simp = args.simp
         self.verbose = args.verbose
@@ -85,6 +86,7 @@ class CoCoSpec(object):
         simplified =  z3.simplify(inv)
         if str(pred) not in ["ERR", "INIT_STATE", "MAIN"]:
             simplified = self.coco_simplify(z3.substitute (simplified, *self.z3MapVar))
+            simplified = z3.substitute(simplified, *self.z3MapVar)
             if self.verbose: self.log("After simplification", simplified)
             self.contract_dict.update({pred:simplified})
         return
@@ -138,13 +140,36 @@ class CoCoSpec(object):
                 initForm = list()
             node_dict = {'input': inputVars, 'init': initForm, 'step': stepForm}
             require, ensure = self.tac.applyTac(node_dict)
+            ensure = self.sanitizeExpr(ensure)
             ag_dict.update({node:{"req": require, "ens":ensure}})
         return ag_dict
+
+
+    def sanitizeExpr(self, expr):
+        """
+        Santize expr by removing variables coming from the automata encoding
+        """
+        conjuncts = get_conjuncts(expr) if self.tac.is_and(expr) else [expr] # get conjuncts
+        flattened = [val for sublist in conjuncts for val in sublist] # flat the list
+        new_expr = []
+        for conj in flattened:
+            subexpr = get_conjuncts(conj) if self.tac.is_and(conj) else [conj]
+            new_vars = [x for x in subexpr if str(x) not in self.automataDirt] # remove
+            good_vars = []
+            for var in new_vars:
+                if self.tac.is_not(var):
+                    if str(var.arg(0)) not in self.automataDirt:
+                        good_vars.append(var)
+                else:
+                    good_vars.append(var)
+            if good_vars !=[]:
+                new_expr = z3.And(good_vars, self.ctx)
+        return [new_expr]
 
     def toStringZ3Formula(self, formula):
         """ Transalte into human readable format"""
         init_formula = formula[0]
-        step_formula = formula[1]
+        step_formula = formula[0]
         init = printCoCo(init_formula)
         step = printCoCo(step_formula)
         if self.tac.is_implies(step_formula):
@@ -156,10 +181,12 @@ class CoCoSpec(object):
             #if self.verbose: self.log("Mode ensure", mode_ensure)
             require_init = "true" #TODO Check if this is coorect
             require = " " + require_init + " -> (" + mode_require + ")"
-            ensure = " " + init + " -> (" + mode_ensure + ")"
+            #ensure = " " + init + " -> (" + mode_ensure + ")" # TODO, I am not sure about the initial step
+            ensure = " true -> " + mode_ensure
         else:
             require = " true -> true"
-            ensure = " " + init + " -> (" + step + ")"
+            # ensure = " " + init + " -> (" + step + ")" # TODO, I am not sure about the initial step
+            ensure = " true ->  " + step
         return require, ensure
 
     def mkCoCoMode(self, cnt, node, form, ag_dict):
@@ -253,6 +280,7 @@ class CoCoSpec(object):
             z3varHorn = self.z3Types[k[1]](k[0], self.ctx)
             z3varLus =  self.z3Types[k[1]](new_v, self.ctx)
             self.z3MapVar.append((z3varHorn,z3varLus))
+
         return
 
 
@@ -294,6 +322,12 @@ class CoCoSpec(object):
                         local_step = zip(lus, typ)
                         self.varMapping.update(dict(zip(horn,lus)))
                         self.varMappingTypes.update(dict(zip(zip(horn,typ),lus)))
+                for n in node.iter("reset"):
+                    self.automataDirt.append(n.attrib.get("name"))
+                    horn = n.attrib.get('name')
+                    typ = 'Bool'
+                    lus = 'True'
+                    #self.varMappingTypes.update({(horn,typ):lus})
                 node_dict.update({node_name:{"input":inp,"output":output, "local_init":local_init, "local_step":local_step}})
             self.varMappingAll.update(node_dict)
 
@@ -302,7 +336,10 @@ class CoCoSpec(object):
                 self.pp.pprint(self.varMapping)
             #pp.pprint(self.varMappingTypes)
             #making pairs of vars for the subsitution
+            #dirtSub = [(z3.Bool(x), z3.Bool("True")) for x in self.automataDirt]
+            #self.z3MapVar = dirtSub
             self.mkZ3Vars()
+
             #pp.pprint(self.z3MapVar)
 
         except Exception as e:
@@ -404,6 +441,7 @@ class CoCoTac(object):
                 req.append(dis)
         if req == []:
             # no changes happen
+            after_tac2 = self.tac2(form)
             ens.append(self.tac2(form))
             req.append(z3.BoolVal(True))
         return req, ens
@@ -437,20 +475,3 @@ class CoCoTac(object):
         req_init, ens_init = self.handleFormula(initF_list, inputVars)
         req_step, ens_step = self.handleFormula(stepF_list, inputVars)
         return [req_init, req_step], [ens_init, ens_step]
-
-
-
-        # if self.is_iff(expr) and self.is_not(expr.arg(0)):
-        #     simplified = self.tac1(expr)
-        #     return simplified
-        # elif self.is_and(expr):
-        #     simp_formula = []
-        #     for dis in get_conjuncts(expr):
-        #         if self.is_or(dis):
-        #             simp = self.tac2(dis)
-        #             simp_formula.append(simp)
-        #         else:
-        #             simp_formula.append(dis)
-        #     return z3.And(simp_formula, self.ctx)
-        # else:
-        #     return expr

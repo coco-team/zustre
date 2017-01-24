@@ -204,7 +204,8 @@ class Zustre(object):
                 if self.args.cg:
                     try:
                         contract_file = self.mk_contract (preds)
-                    except:
+                    except Exception as e:
+                        print e
                         self.log.warning('Failed to generate CoCoSpec')
         if not self.args.save:
             self.log.debug("Cleaning up temp files ...")
