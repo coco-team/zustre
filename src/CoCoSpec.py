@@ -157,10 +157,7 @@ class CoCoSpec(object):
             new_vars = [x for x in subexpr if str(x) not in self.automataDirt] # remove
             good_vars = []
             for var in new_vars:
-                if self.tac.is_not(var):
-                    if str(var.arg(0)) not in self.automataDirt:
-                        good_vars.append(var)
-                else:
+                if self.tac.is_not(var) and str(var.arg(0)) not in self.automataDirt:
                     good_vars.append(var)
             if good_vars !=[]:
                 new_expr = z3.And(good_vars, self.ctx)
