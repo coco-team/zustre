@@ -53,6 +53,7 @@ def parseArgs (argv):
     p.add_argument ('--s-func', help='S-Function', default=None, dest="sfunction")
     p.add_argument ('--eldarica', help='Use Eldarica', default =False, action='store_true', dest="eldarica")
     p.add_argument ('--stateflow', help='Cex for Stateflow', default =False, action='store_true', dest="stateflow")
+    p.add_argument ('--matlab', help='Generate Matlab-style cocospec', default =False, action='store_true', dest="matlab")
     pars = p.parse_args (argv)
     return pars
 

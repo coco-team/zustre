@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 from z3_utils import *
 from cocoprinter import *
 from lustreAnnotation import LustreAnnot
-
+from Matlab import Matlab
 
 
 debug_coco = ("""contract %s (%s) returns (%s);
@@ -65,6 +65,7 @@ class CoCoSpec(object):
         self.do_simp = args.simp
         self.verbose = args.verbose
         self.kind2 = args.kind2
+        self.matlab = args.matlab
         self.pp = pprint.PrettyPrinter(indent=4)
         self.tac = None
         self.z3Types = {"Int":z3.Int, "Real": z3.Real,"Bool":z3.Bool}
@@ -90,6 +91,7 @@ class CoCoSpec(object):
             if self.verbose: self.log("After simplification", simplified)
             self.contract_dict.update({pred:simplified})
         return
+
 
     def coco_simplify (self, e):
         # Teme TODO
@@ -139,7 +141,7 @@ class CoCoSpec(object):
             except:
                 initForm = list()
             node_dict = {'input': inputVars, 'init': initForm, 'step': stepForm}
-            require, ensure = self.tac.applyTac(node_dict)
+            require, ensure = self.tac.applyTac(node_dict, self.matlab)
             ensure = self.sanitizeExpr(ensure)
             ag_dict.update({node:{"req": require, "ens":ensure}})
         return ag_dict
@@ -156,8 +158,17 @@ class CoCoSpec(object):
             subexpr = get_conjuncts(conj) if self.tac.is_and(conj) else [conj]
             new_vars = [x for x in subexpr if str(x) not in self.automataDirt] # remove
             good_vars = []
+
             for var in new_vars:
-                if self.tac.is_not(var) and str(var.arg(0)) not in self.automataDirt:
+                if self.tac.is_not(var):
+                    if str(var.arg(0)) not in self.automataDirt:
+                        good_vars.append(var)
+                elif self.tac.is_or(var):
+                    disjunct = get_disjuncts(var)
+                    r_disj = [x for x in disjunct if str(x) not in self.automataDirt]
+                    all_disjunct = z3.Or(r_disj, self.ctx)
+                    good_vars.append(all_disjunct)
+                else:
                     good_vars.append(var)
             if good_vars !=[]:
                 new_expr = z3.And(good_vars, self.ctx)
@@ -195,7 +206,7 @@ class CoCoSpec(object):
         require, ensure = self.toStringZ3Formula((ag_dict[node])['ens'])
         mode_name = "Mode_"+node+"_"+str(cnt)
         coco_mode = mode_spec % (mode_name, require, ensure)
-        return assume, guarantee, coco_mode
+        return assume, guarantee, coco_mode, require, ensure
 
     def mkCoCoSpec(self, lusFile):
         """ Build the whole CoCoSpec """
@@ -228,9 +239,11 @@ class CoCoSpec(object):
 
         all_contract = "-- CoCoSpec --\n"
         ag_dict = self.reformulateAG(coco_dict)
+        pure_lustre = dict() # keep track of the require and ensure of each node
         for node, form in coco_dict.iteritems():
             cnt = 0 #counter for different mode
-            assume, guarantee, coco_mode = self.mkCoCoMode(cnt, node, form, ag_dict)
+            assume, guarantee, coco_mode, require, ensure = self.mkCoCoMode(cnt, node, form, ag_dict)
+            pure_lustre.update({node:{"req":require, "ens":ensure}})
             profile = self.contractProfile(node) if is_contract_profile else "() returns ();"
             outputList = (self.varMappingAll[node])["output"]
             inp = self.mkProfileInOut((self.varMappingAll[node])["input"])
@@ -251,6 +264,11 @@ class CoCoSpec(object):
             else:
                 self._log.warning("Lustre parsing NOT OK")
                 assert False
+        if self.matlab:
+            self._log.info("Making Matlab-style cocosim")
+            matlab = Matlab(self.varMappingAll, pure_lustre, coco_dict)
+            if matlab.mkMatlab(lusFile):
+                self._log.info("Successfully generated EMF")
         return all_contract
 
     def mkProfileInOut(self, inpList):
@@ -350,6 +368,7 @@ class CoCoTac(object):
     def __init__(self, verbose, ctx):
         self.verbose = verbose
         self.ctx = ctx
+        self.isMatlab = False
         self.pp = pprint.PrettyPrinter(indent=4)
 
     #TODO, laziness and ugly
@@ -438,8 +457,11 @@ class CoCoTac(object):
                 req.append(dis)
         if req == []:
             # no changes happen
-            after_tac2 = self.tac2(form)
-            ens.append(self.tac2(form))
+            #after_tac2 = self.tac2(form)
+            if self.isMatlab:
+                ens.append(form)
+            else:
+                ens.append(self.tac2(form))
             req.append(z3.BoolVal(True))
         return req, ens
 
@@ -463,7 +485,8 @@ class CoCoTac(object):
         return require, ensure
 
 
-    def applyTac(self, node_dict):
+    def applyTac(self, node_dict, isMatlab):
+        self.isMatlab = isMatlab
         initF =node_dict['init']
         stepF =node_dict['step']
         inputVars = node_dict['input']

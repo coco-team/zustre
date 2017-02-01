@@ -1,3 +1,20 @@
+
+contract top (Delta:int) returns (OK:bool);
+var Total:int; Y:bool; 
+let
+   assume true -- work in progress;
+
+   guarantee true -- work in progress;
+   
+ mode Mode_top_0
+     (
+       require  true -> true;
+       ensure  true ->  (Y => not (pre(Total) >= 0) or  Total >= 0);
+     );
+
+tel
+
+
 -- Returns true once n cycles have passed since the beginning of
 -- time.
 node cyclesElapsedGT (n: int) returns (out: bool);
