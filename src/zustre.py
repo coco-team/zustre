@@ -109,24 +109,16 @@ class Zustre(object):
         self.log.info("Building CoCoSpec ...")
         lusFile = self.args.file
         self.coco.parseTraceFile(self.trace_file)
-        #s = z3.Solver(ctx=fp.ctx) # to build an SMT formula
         for p in preds:
-            # create an app by creating dummy variables using p.arity () and p.domain()
             lemmas = utils.fp_get_cover_delta (self.fp, p)
             self.coco.addContract(p.decl(),lemmas)
         cocoFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
         cocoFileName = cocoFile_dir + os.path.basename(lusFile) + ".coco"
-        cocoSpec = self.coco.mkCoCoSpec(lusFile)
+        cocoSpec, emf = self.coco.mkCoCoSpec(lusFile)
         with open(cocoFileName,"w") as f:
             f.write(cocoSpec)
             self.log.info("Contract Generated in: %s", str(cocoFileName))
-        if self.args.kind2:
-            kind2 = Kind2(self.args)
-            try:
-                kind2.validate(cocoFileName)
-            except Exception as e:
-                self.log.exception(str(e))
-        return cocoFileName
+        return cocoFileName, emf
 
 
     def get_raw_invs(self, preds):
@@ -192,7 +184,7 @@ class Zustre(object):
             for l in lemmas:
                 if self.args.verbose: print l
                 fp_add_cover (self.fp, l.arg(0), l.arg(1))
-        contract_file = None
+        contract_file, emf_file = None, None
         with utils.stats.timer ('Query'):
             res = self.fp.query (q[0])
             if res == z3.sat:
@@ -203,7 +195,7 @@ class Zustre(object):
                 if self.args.ri: self.get_raw_invs(preds)
                 if self.args.cg:
                     try:
-                        contract_file = self.mk_contract (preds)
+                        contract_file, emf_file = self.mk_contract (preds)
                     except Exception as e:
                         print e
                         self.log.warning('Failed to generate CoCoSpec')
@@ -215,7 +207,7 @@ class Zustre(object):
             except:
                 self.log.info('No Cleaning of temp files ...')
         if self.args.xml:
-            utils.stats.xml_print(self.args.node, cex, contract_file)
+            utils.stats.xml_print(self.args.node, cex, contract_file, emf_file)
         else:
             utils.stats.brunch_print()
 

@@ -11,7 +11,8 @@ tel
 root = os.path.dirname (os.path.dirname (os.path.realpath (__file__)))
 
 class Matlab(object):
-    def __init__(self, varMapping, req_ens, coco_dict):
+    def __init__(self, verbose, varMapping, req_ens, coco_dict):
+        self.verbose = verbose
         self.varMapping = varMapping
         self.req_ens = req_ens
         self.coco_dict = coco_dict
@@ -61,6 +62,7 @@ class Matlab(object):
             raise IOError ("Cannot find LustreC")
         return lustrec
 
+
     def mk_emf(self, matlab_contract):
         """ Generate Embedded Matlab using LustreC """
         lusFile_dir = os.path.dirname(os.path.abspath(matlab_contract)) + os.sep
@@ -68,7 +70,14 @@ class Matlab(object):
         cmd = [lustrec, "-emf"] + ["-d", lusFile_dir, matlab_contract]
         p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         emf, _ = p.communicate()
-        return "done" in emf
+        if "done" in emf:
+            return True
+        else:
+            if self.verbose:
+                print "Unable to generate EMF:"
+                print emf
+                print "----------"
+            return False
 
 
 
@@ -80,13 +89,23 @@ class Matlab(object):
             inp = self.mkProfileInOut((self.varMapping[node])["input"])
             out = self.mkProfileInOut(outputList)
             local = self.mkProfileLocal((self.varMapping[node])["local_init"], outputList)
+
             # Currently ouputing only input/output contract and not local flows
             if local == "":
                 ens = self.req_ens[node]['ens']
                 node_out = lustre_matlab % (node, inp + "; " + out, ens)
                 all_nodes += node_out + "\n"
+            if self.verbose:
+                print "Node: " + str(node)
+                print "Input: " + str(inp)
+                print "Output: " + str(out)
+                print "Local: " + str(local)
+                print "Inv: " + str(ens)
+                print "-------------"
             cocoFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
             matlab_contract =cocoFile_dir + os.path.basename(lusFile) + ".matlab.lus"
             with open(matlab_contract,"w") as f:
                  f.write(all_nodes)
-            return self.mk_emf(matlab_contract)
+            if self.mk_emf(matlab_contract):
+                return cocoFile_dir + os.path.basename(lusFile) + ".matlab.emf"
+            return None

@@ -24,8 +24,6 @@ coco_spec = ("""contract %s (%s) returns (%s);
 %s
 let
    assume (%s);
-
-
    guarantee  (%s);
 tel
 """)
@@ -239,11 +237,11 @@ class CoCoSpec(object):
 
         all_contract = "-- CoCoSpec --\n"
         ag_dict = self.reformulateAG(coco_dict)
-        pure_lustre = dict() # keep track of the require and ensure of each node
+        matlab_dict = dict() # keep track of the require and ensure of each node
         for node, form in coco_dict.iteritems():
             cnt = 0 #counter for different mode
             assume, guarantee, coco_mode, require, ensure = self.mkCoCoMode(cnt, node, form, ag_dict)
-            pure_lustre.update({node:{"req":require, "ens":ensure}})
+            matlab_dict.update({node:{"req":require, "ens":ensure}}) # collecting requires and ensure for matlab generation
             profile = self.contractProfile(node) if is_contract_profile else "() returns ();"
             outputList = (self.varMappingAll[node])["output"]
             inp = self.mkProfileInOut((self.varMappingAll[node])["input"])
@@ -265,11 +263,16 @@ class CoCoSpec(object):
                 self._log.warning("Lustre parsing NOT OK")
                 assert False
         if self.matlab:
-            self._log.info("Making Matlab-style cocosim")
-            matlab = Matlab(self.varMappingAll, pure_lustre, coco_dict)
-            if matlab.mkMatlab(lusFile):
+            self._log.info("Making Matlab-style CoCoSpec")
+            matlab = Matlab(self.verbose, self.varMappingAll, matlab_dict, coco_dict)
+            emf_file = matlab.mkMatlab(lusFile)
+            if emf_file:
                 self._log.info("Successfully generated EMF")
-        return all_contract
+                return all_contract, emf_file
+            else:
+                self._log.warning("Unable to generate EMF")
+                return all_contract, None
+        return all_contract, None
 
     def mkProfileInOut(self, inpList):
         return ";".join("%s:%s" % (v,t.lower()) for (v,t) in inpList)
@@ -479,9 +482,9 @@ class CoCoTac(object):
             else:
                 ens_list.append(self.nonClauseTac(f))
         req_list = [z3.BoolVal(True)] if req == [] else req
-        ens_list = ens_list if ens == [] else ens_list + ens
-        ensure = z3.And(ens_list, self.ctx) if len(ens_list) > 1 else ens_list[0]
-        require = z3.And(req_list, self.ctx) if len(req_list) > 1 else req_list[0]
+        if ens != []: ens_list += ens
+        require = z3.And(req_list, self.ctx) if len(req_list)>1 else req_list[0]
+        ensure =  z3.And(ens_list, self.ctx) if ens_list != [] else ens_list[0]
         return require, ensure
 
 

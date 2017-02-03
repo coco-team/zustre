@@ -101,7 +101,7 @@ def brunch_print ():
         print 'BRUNCH_STAT {name} {value}'.format (name=k, value=_statistics [k])
     print '----------------------------------------------------------------------'
 
-def xml_print(prop, cex, contract, timeout=False):
+def xml_print(prop, cex, contract, emf, timeout=False):
   """ Print result in XML format """
   xml_valid = ("""<?xml version="1.0"?>
    <Results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -111,6 +111,7 @@ def xml_print(prop, cex, contract, timeout=False):
       <Parse unit="sec">%s</Parse>
       <Query unit="sec">%s</Query>
       <Answer>%s</Answer>
+      %s
       %s
      </Property>
    </Results>
@@ -160,8 +161,9 @@ def xml_print(prop, cex, contract, timeout=False):
     print xml_cex % (prop, str(d),str(lus), str(parse), str(query),result, cex)
   else:
     if contract != None:
-      c_str = "<contractFile>" + str(contract)+ "</contractFile>"
-      print xml_valid % (prop, str(d),str(lus), str(parse), str(query),result, c_str)
+      c_str = "<contractFile>" + str(contract) + "</contractFile>"
+      e_str = "<emfFile>" + str(emf) + "</emfFile>"
+      print xml_valid % (prop, str(d),str(lus), str(parse), str(query),result, c_str, e_str)
     elif timeout:
       print xml_timeout % (prop, str(d),str(lus), str(parse), str(query))
     else:
