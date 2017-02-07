@@ -82,8 +82,9 @@ class Matlab(object):
 
 
     def mkMatlab(self, lusFile):
-        """ Build the whole CoCoSpec """
-        all_nodes = "-- CoCoSpec --\n"
+        """ Build EMF """
+        if self.verbose: print "EMF Generation"
+        all_nodes = ""
         for node, form in self.coco_dict.iteritems():
             outputList = (self.varMapping[node])["output"]
             inp = self.mkProfileInOut((self.varMapping[node])["input"])
@@ -102,10 +103,10 @@ class Matlab(object):
                 print "Local: " + str(local)
                 print "Inv: " + str(ens)
                 print "-------------"
-            cocoFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
-            matlab_contract =cocoFile_dir + os.path.basename(lusFile) + ".matlab.lus"
-            with open(matlab_contract,"w") as f:
-                 f.write(all_nodes)
-            if self.mk_emf(matlab_contract):
-                return cocoFile_dir + os.path.basename(lusFile) + ".matlab.emf"
-            return None
+        cocoFile_dir = os.path.dirname(os.path.abspath(lusFile)) + os.sep
+        matlab_contract =cocoFile_dir + os.path.basename(lusFile) + ".matlab.lus"
+        with open(matlab_contract,"w") as f:
+            f.write(all_nodes)
+        if self.mk_emf(matlab_contract):
+            return cocoFile_dir + os.path.basename(lusFile) + ".matlab.emf"
+        return None
