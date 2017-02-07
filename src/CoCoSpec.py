@@ -7,7 +7,7 @@ from z3_utils import *
 from cocoprinter import *
 from lustreAnnotation import LustreAnnot
 from Matlab import Matlab
-
+import itertools
 
 debug_coco = ("""contract %s (%s) returns (%s);
  %s
@@ -480,7 +480,8 @@ class CoCoTac(object):
             if self.is_or(f):
                 req, ens =  self.clauseTac(f, inputVars)
             else:
-                ens_list.append(self.nonClauseTac(f))
+                non_clause = self.nonClauseTac(f)
+                ens_list.append(non_clause)
         req_list = [z3.BoolVal(True)] if req == [] else req
         if ens != []: ens_list += ens
         require = z3.And(req_list, self.ctx) if len(req_list)>1 else req_list[0]
@@ -490,8 +491,8 @@ class CoCoTac(object):
 
     def applyTac(self, node_dict, isMatlab):
         self.isMatlab = isMatlab
-        initF =node_dict['init']
-        stepF =node_dict['step']
+        initF = node_dict['init'] if z3.is_bool(node_dict['init']) else z3.BoolVal(True, self.ctx)
+        stepF = node_dict['step'] if z3.is_bool(node_dict['step']) else z3.BoolVal(True, self.ctx)
         inputVars = node_dict['input']
         initF_list = get_conjuncts(initF) if self.is_and(initF) else [initF]
         stepF_list = get_conjuncts(stepF) if self.is_and(stepF) else [stepF]

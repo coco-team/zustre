@@ -145,6 +145,8 @@ class Zustre(object):
     def setSolver(self):
         """Set the configuration for the solver"""
         self.fp.set (engine='spacer')
+        #z3.set_option(rational_to_decimal=True)
+        #self.fp.set('precision',30)
         if self.args.stat:
             self.fp.set('print_statistics',True)
         if self.args.spacer_verbose:
