@@ -62,7 +62,6 @@ class CoCoSpec(object):
         self.z3MapVar = []
         self.do_simp = args.simp
         self.verbose = args.verbose
-        self.kind2 = args.kind2
         self.matlab = args.matlab
         self.pp = pprint.PrettyPrinter(indent=4)
         self.tac = None
@@ -252,16 +251,6 @@ class CoCoSpec(object):
             contract =  mode_cocospec % (node, inp, out, local, assume, guarantee, coco_mode)
             all_contract += contract + "\n"
             if self.verbose: print "==== CoCo ===  \n" + contract + "\n===== CoCo ====="
-        if self.kind2:
-            self._log.info("Attaching the Lustre file for Kind2 validation")
-            lusAnnot = LustreAnnot()
-            if lusAnnot.parseFile(lusFile):
-                self._log.info("Lustre parsing OK")
-                annotated_lus = lusAnnot.annotate()
-                all_contract += " -- Lustre Nodes --\n" + annotated_lus
-            else:
-                self._log.warning("Lustre parsing NOT OK")
-                assert False
         if self.matlab:
             self._log.info("Making Matlab-style CoCoSpec")
             matlab = Matlab(self.verbose, self.varMappingAll, matlab_dict, coco_dict)

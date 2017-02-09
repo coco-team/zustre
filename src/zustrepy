@@ -38,8 +38,6 @@ def parseArgs (argv):
                        help='Print Horn Clause in SMT Format')
     p.add_argument ('--no-solving', dest='no_solving', default=False, action='store_true',
                     help='Generate only Horn clauses, i.e. do not solve')
-    p.add_argument ('--validate', help='Validate generated contract with Kind2', action='store_true',
-                    default=False, dest="kind2")
     p.add_argument ('--xml', help='Output result in XML format', action='store_true',
                     default=False, dest="xml")
     p.add_argument ('--save', help='Save intermediate files', action='store_true',

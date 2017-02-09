@@ -22,6 +22,7 @@ def fp_add_cover (fp, pred, lemma, level=-1):
 
 def fp_get_cover_delta (fp, pred, level=-1):
     sub = []
+
     for i in range (0, pred.num_args ()):
         sub.append (pred.arg (i))
     lemma = fp.get_cover_delta (level, pred.decl ())

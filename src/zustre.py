@@ -265,7 +265,7 @@ class Zustre(object):
 
     def encode(self):
         """generate CHC and not solve"""
-        hornFormulas = mk_horn()
+        hornFormulas = self.mk_horn()
         if not hornFormulas:
             self.log.error('Problem generating Horn formulae')
             utils.stat ('Result', 'ERR')
