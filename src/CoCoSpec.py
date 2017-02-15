@@ -5,7 +5,6 @@ import textwrap
 import xml.etree.ElementTree as ET
 from z3_utils import *
 from cocoprinter import *
-from lustreAnnotation import LustreAnnot
 from Matlab import Matlab
 import itertools
 

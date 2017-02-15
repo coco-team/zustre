@@ -506,10 +506,23 @@ class Formatter:
         return to_format(a.as_string())
 
     def pp_rational(self, a):
+        asexpr = a.sexpr()
+        result = ""
+        try:
+            if "(" in asexpr or ")" in asexpr:
+                r = asexpr.replace("(","")
+                r = r.replace(")","")
+                r = r.replace(" ","")
+                result = str(r)
+            elif "." in asexpr:
+                result = str(asexpr)
+        except Exception as e:
+            result = a
         if not self.rational_to_decimal:
-            return to_format(a.as_string())
+            bla= to_format(result)
+            return bla
         else:
-            return to_format(a.as_decimal(self.precision))
+            return to_format(result.as_decimal(self.precision))
 
     def pp_algebraic(self, a):
         return to_format(a.as_decimal(self.precision))
@@ -673,7 +686,8 @@ class Formatter:
         if z3.is_int_value(a):
             return self.pp_int(a)
         elif z3.is_rational_value(a):
-            return self.pp_rational(a)
+            rat = self.pp_rational(a)
+            return rat
         elif z3.is_algebraic_value(a):
             return self.pp_algebraic(a)
         elif z3.is_bv_value(a):

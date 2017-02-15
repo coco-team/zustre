@@ -155,7 +155,8 @@ class Zustre(object):
         self.fp.set('pdr.flexible_trace',True)
         self.fp.set('reset_obligation_queue',False)
         self.fp.set('spacer.elim_aux',False)
-        if self.args.eldarica: self.fp.set('print_fixedpoint_extensions', False)
+        if self.args.eldarica:
+            self.fp.set('print_fixedpoint_extensions', False)
         if self.args.utvpi: self.fp.set('pdr.utvpi', False)
         if self.args.tosmt:
             self.log.info("Setting low level printing")
@@ -196,11 +197,12 @@ class Zustre(object):
                 utils.stat ('Result', 'SAFE')
                 if self.args.ri: self.get_raw_invs(preds)
                 if self.args.cg:
-                    try:
-                        contract_file, emf_file = self.mk_contract (preds)
-                    except Exception as e:
-                        print e
-                        self.log.warning('Failed to generate CoCoSpec')
+                    contract_file, emf_file = self.mk_contract (preds)
+                    # try:
+
+                    # except Exception as e:
+                    #     print e
+                    #     self.log.warning('Failed to generate CoCoSpec')
         if not self.args.save:
             self.log.debug("Cleaning up temp files ...")
             try:
