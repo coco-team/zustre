@@ -8,7 +8,7 @@ from LogManager import LoggingManager
 import os,subprocess,sys
 import shutil
 from CoCoSpec import CoCoSpec
-from kind2 import Kind2
+#from kind2 import Kind2
 from Cex import Cex
 from CexSF import CexSF
 from sfunction import SFunction
@@ -67,14 +67,14 @@ class Zustre(object):
             raise IOError ("Cannot find Eldarica")
         return eldarica
 
-    def getKind2 (self):
-        """ Get the binary location for Kind2"""
-        kind2 = None
-        if not self.isexec (kind2):
-            lustrec = os.path.join (root, "bin/kind2")
-        if not self.isexec (kind2):
-            raise IOError ("Cannot find KIND2")
-        return kind2
+#def getKind2 (self):
+#       """ Get the binary location for Kind2"""
+#       kind2 = None
+#       if not self.isexec (kind2):
+#           lustrec = os.path.join (root, "bin/kind2")
+#       if not self.isexec (kind2):
+#           raise IOError ("Cannot find KIND2")
+#       return kind2
 
 
     def mk_horn(self):
