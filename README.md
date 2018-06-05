@@ -18,7 +18,7 @@ Zustre is distributed under a modified BSD license. See [LICENSE](LICENSE) for d
 * Python v. 2.7. (or up)
 
 
-##Compilation##
+## Compilation ##
 
 *  Build separately [LustreC](https://github.com/coco-team/lustrec)
 * `cd zustre ; mkdir build ; cd build`
